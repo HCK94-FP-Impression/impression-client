@@ -24,7 +24,7 @@ export default function Navbar() {
   // dummy UI state
   const isAuthenticated = true;
   const quota = 12;
-  const appName = "LinkedOut";
+  const appName = "Impression";
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/60 bg-white/40 backdrop-blur-2xl shadow-sm shadow-slate-900/5">
