@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BriefcaseBusiness,
@@ -26,6 +27,14 @@ import {
 type FeedProfileCardProps = {
   isFlipped: boolean;
   onToggleFlip: () => void;
+};
+
+type RadarCategory = "sosial" | "profesional";
+
+// Per-category scores at each criterion vertex (criteria[0], criteria[1], criteria[2])
+const RADAR_SCORES: Record<RadarCategory, [number, number, number]> = {
+  sosial:      [75, 80, 93],
+  profesional: [92, 84, 76],
 };
 
 type CollapsibleSectionProps = {
@@ -81,7 +90,13 @@ export default function FeedProfileCard({
   isFlipped,
   onToggleFlip,
 }: FeedProfileCardProps) {
-  
+  const [activeRadar, setActiveRadar] = useState<RadarCategory | null>(null);
+
+  const toggleRadar = (cat: RadarCategory) =>
+    setActiveRadar((prev) => (prev === cat ? null : cat));
+
+  const activePct = activeRadar ? RADAR_SCORES[activeRadar] : null;
+
   const languageScores: Record<string, string> = {
     Native: "100%",
     Fluent: "90%",
@@ -240,57 +255,111 @@ export default function FeedProfileCard({
 
                       <div className="relative my-2 flex h-36 w-36 items-center justify-center">
                         <svg className="h-full w-full" viewBox="0 0 100 100">
+                          {/* Grid rings */}
                           <polygon points="50,15 85,75 15,75" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
                           <polygon points="50,35 67.5,65 32.5,65" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.75" />
+                          {/* Axes */}
                           <line x1="50" y1="55" x2="50" y2="15" stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
                           <line x1="50" y1="55" x2="85" y2="75" stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
                           <line x1="50" y1="55" x2="15" y2="75" stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
-                          
-                          <polygon points="50,30 78,70 22,71" fill="url(#socialGradient)" stroke="#06b6d4" strokeWidth="1.5" strokeLinejoin="round" className="opacity-75" />
-                          <polygon points="50,18 74,66 29,64" fill="url(#professionalGradient)" stroke="#6366f1" strokeWidth="1.5" strokeLinejoin="round" className="opacity-80" />
 
-                          <circle cx="50" cy="30" r="2" fill="#06b6d4" />
-                          <circle cx="78" cy="70" r="2" fill="#06b6d4" />
-                          <circle cx="22" cy="71" r="2" fill="#06b6d4" />
-                          <circle cx="50" cy="18" r="2" fill="#818cf8" />
-                          <circle cx="74" cy="66" r="2" fill="#818cf8" />
-                          <circle cx="29" cy="64" r="2" fill="#818cf8" />
+                          {/* Sosial polygon */}
+                          <polygon
+                            points="50,30 78,70 22,71"
+                            fill="url(#socialGradient)"
+                            stroke="#06b6d4"
+                            strokeWidth={activeRadar === "sosial" ? 2 : 1.5}
+                            strokeLinejoin="round"
+                            opacity={activeRadar === "profesional" ? 0.2 : 0.85}
+                            style={{ transition: "opacity 0.25s, stroke-width 0.2s" }}
+                          />
+                          {/* Profesional polygon */}
+                          <polygon
+                            points="50,18 74,66 29,64"
+                            fill="url(#professionalGradient)"
+                            stroke="#6366f1"
+                            strokeWidth={activeRadar === "profesional" ? 2 : 1.5}
+                            strokeLinejoin="round"
+                            opacity={activeRadar === "sosial" ? 0.2 : 0.9}
+                            style={{ transition: "opacity 0.25s, stroke-width 0.2s" }}
+                          />
+
+                          {/* Sosial dots */}
+                          {([{cx:50,cy:30},{cx:78,cy:70},{cx:22,cy:71}] as const).map((p, i) => (
+                            <circle key={i} cx={p.cx} cy={p.cy} r={activeRadar === "sosial" ? 3 : 2} fill="#06b6d4"
+                              opacity={activeRadar === "profesional" ? 0.2 : 1}
+                              style={{ transition: "opacity 0.25s, r 0.2s" }} />
+                          ))}
+                          {/* Profesional dots */}
+                          {([{cx:50,cy:18},{cx:74,cy:66},{cx:29,cy:64}] as const).map((p, i) => (
+                            <circle key={i} cx={p.cx} cy={p.cy} r={activeRadar === "profesional" ? 3 : 2} fill="#818cf8"
+                              opacity={activeRadar === "sosial" ? 0.2 : 1}
+                              style={{ transition: "opacity 0.25s, r 0.2s" }} />
+                          ))}
 
                           <defs>
                             <linearGradient id="socialGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="rgba(6, 182, 212, 0.2)" />
-                              <stop offset="100%" stopColor="rgba(6, 182, 212, 0.03)" />
+                              <stop offset="0%" stopColor="rgba(6,182,212,0.2)" />
+                              <stop offset="100%" stopColor="rgba(6,182,212,0.03)" />
                             </linearGradient>
                             <linearGradient id="professionalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="rgba(99, 102, 241, 0.25)" />
-                              <stop offset="100%" stopColor="rgba(99, 102, 241, 0.03)" />
+                              <stop offset="0%" stopColor="rgba(99,102,241,0.25)" />
+                              <stop offset="100%" stopColor="rgba(99,102,241,0.03)" />
                             </linearGradient>
                           </defs>
                         </svg>
 
-                        <div className="absolute left-1/2 top-[-16px] -translate-x-1/2 text-center">
+                        {/* Axis labels + conditional percentages */}
+                        <div className="absolute left-1/2 -top-4.5 -translate-x-1/2 text-center">
                           <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[0]}</p>
-                          <span className="text-[9px] font-bold text-indigo-300">92%</span>
+                          {activePct && (
+                            <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
+                              {activePct[0]}%
+                            </span>
+                          )}
                         </div>
-                        <div className="absolute bottom-[0px] right-[-8px] text-right">
+                        <div className="absolute bottom-0 -right-2.5 text-right">
                           <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[1]}</p>
-                          <span className="text-[9px] font-bold text-indigo-300">84%</span>
+                          {activePct && (
+                            <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
+                              {activePct[1]}%
+                            </span>
+                          )}
                         </div>
-                        <div className="absolute bottom-[0px] left-[-8px] text-left">
+                        <div className="absolute bottom-0 -left-2.5 text-left">
                           <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[2]}</p>
-                          <span className="text-[9px] font-bold text-indigo-300">76%</span>
+                          {activePct && (
+                            <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
+                              {activePct[2]}%
+                            </span>
+                          )}
                         </div>
                       </div>
 
+                      {/* Clickable legend */}
                       <div className="mt-3 flex w-full justify-center gap-4 border-t border-white/5 pt-2">
-                        <div className="flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#06b6d4]" />
-                          <span className="text-[8px] font-black text-slate-400">SOSIAL</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#6366f1]" />
-                          <span className="text-[8px] font-black text-slate-400">PROFESIONAL</span>
-                        </div>
+                        {(["sosial", "profesional"] as RadarCategory[]).map((cat) => {
+                          const isCyan = cat === "sosial";
+                          const isActive = activeRadar === cat;
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => toggleRadar(cat)}
+                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest transition-all duration-200 ${
+                                isActive
+                                  ? isCyan ? "text-cyan-400 bg-cyan-400/10 ring-1 ring-cyan-400/30"
+                                           : "text-indigo-300 bg-indigo-400/10 ring-1 ring-indigo-400/30"
+                                  : "text-slate-500 hover:text-slate-300"
+                              }`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full transition-transform duration-200 ${
+                                isCyan ? "bg-[#06b6d4]" : "bg-[#6366f1]"
+                              } ${isActive ? "scale-150" : ""}`} />
+                              {cat}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
