@@ -1,618 +1,447 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
-  CloudUpload,
+  Coins,
+  FileText,
   Lock,
-  Target,
+  Send,
+  Sparkles,
   WandSparkles,
 } from "lucide-react";
 import ProfileEditor from "./components/ProfileEditor";
 import { initialProfile, type ProfileData } from "../profile/data";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 type FeedbackState = { error: string; message: string };
+type LoadingState = { generate: boolean; submit: boolean; parse: boolean };
 
-type LoadingState = {
-  upload: boolean;
-  generate: boolean;
-  submit: boolean;
-};
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-const uploadQuotaRequirement = 5;
+const PUBLISH_COST = 5;   // rating points needed to republish
+const CV_TOKEN_COST = 3;  // CV tokens needed per parse (separate pool)
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
-  if (error instanceof Error) {
-    return error.message || fallback;
-  }
+  if (error instanceof Error) return error.message || fallback;
   return fallback;
 };
 
-const Notice = ({
-  message,
-  tone = "error",
-}: {
-  message: string;
-  tone?: "error" | "success";
-}) => {
-  if (!message) {
-    return null;
-  }
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-  const toneStyles =
-    tone === "success"
-      ? "border-emerald-100 bg-emerald-50 text-emerald-600"
-      : "border-rose-100 bg-rose-50 text-rose-600";
-
+const Notice = ({ message, tone = "error" }: { message: string; tone?: "error" | "success" }) => {
+  if (!message) return null;
+  const cls = tone === "success"
+    ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+    : "border-rose-100 bg-rose-50 text-rose-600";
   return (
-    <div
-      className={`rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${toneStyles}`}
-    >
+    <div className={`rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${cls}`}>
       {message}
     </div>
   );
 };
 
-const Panel = ({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) => (
-  <div
-    className={`rounded-[32px] border border-white/60 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.12)] ${className}`}
-  >
+const GlassCard = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
+  <div className={`rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl ${className}`}>
     {children}
   </div>
 );
 
-export default function EditProfilePage() {
-  const [profile, setProfile] = useState<ProfileData>(initialProfile);
-  const [editor, setEditor] = useState<ProfileData>(initialProfile);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [saveFeedback, setSaveFeedback] = useState<FeedbackState>({
-    error: "",
-    message: "",
-  });
+const SectionHead = ({ icon, label, aside }: { icon: ReactNode; label: string; aside?: ReactNode }) => (
+  <div className="mb-5 flex items-center justify-between">
+    <div className="flex items-center gap-2.5">
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-500">
+        {icon}
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">{label}</span>
+    </div>
+    {aside}
+  </div>
+);
 
-  const [quota, setQuota] = useState(0);
-  const [file, setFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
-  const [targetJob, setTargetJob] = useState("");
-  const [criteria, setCriteria] = useState(["", "", ""]);
-  const [loading, setLoading] = useState<LoadingState>({
-    upload: false,
-    generate: false,
-    submit: false,
-  });
-  const [feedback, setFeedback] = useState<FeedbackState>({
-    error: "",
-    message: "",
-  });
+const TokenBadge = ({ tokens, cost, label }: { tokens: number; cost: number; label: string }) => (
+  <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
+    tokens >= cost ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-rose-100 bg-rose-50 text-rose-500"
+  }`}>
+    <Coins size={9} /> {tokens} {label}
+  </div>
+);
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export default function EditProfilePage() {
+  // Profile data — live, no explicit save needed
+  const [profile, setProfile] = useState<ProfileData>(initialProfile);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  // Token pools
+  const [ratingPoints, setRatingPoints] = useState(0);
+  const [cvTokens, setCvTokens] = useState(CV_TOKEN_COST);   // new users: 1 free parse
+  const [hasPublishedBefore, setHasPublishedBefore] = useState(false);
+
+  // CV Parser
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [parseFeedback, setParseFeedback] = useState<FeedbackState>({ error: "", message: "" });
+
+  // Criteria
+  const [criteriaMode, setCriteriaMode] = useState<"ai" | "manual">("ai");
+  const [criteriaFeedback, setCriteriaFeedback] = useState<FeedbackState>({ error: "", message: "" });
+
+  // Publish
+  const [publishFeedback, setPublishFeedback] = useState<FeedbackState>({ error: "", message: "" });
   const [published, setPublished] = useState(false);
 
-  const ratingsNeeded = Math.max(uploadQuotaRequirement - quota, 0);
-  const isLocked = quota < uploadQuotaRequirement;
+  const [loading, setLoading] = useState<LoadingState>({ generate: false, submit: false, parse: false });
 
-  const canSubmit = useMemo(() => {
-    return (
-      imageUrl &&
-      targetJob.trim() &&
-      criteria.every((item) => item.trim().length > 0)
-    );
-  }, [imageUrl, targetJob, criteria]);
+  const cvInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const canPublishFree = !hasPublishedBefore;
+  const canPublishPaid = ratingPoints >= PUBLISH_COST;
+  const canPublish = canPublishFree || canPublishPaid;
+  const ratingsNeeded = Math.max(PUBLISH_COST - ratingPoints, 0);
+  const canUseCvParser = cvTokens >= CV_TOKEN_COST;
+
+  const canSubmit = useMemo(
+    () => profile.role.trim() && profile.criteria.every((c) => c.trim().length > 0),
+    [profile.role, profile.criteria],
+  );
+
+  // Sync selectedImage → profile photo preview
   useEffect(() => {
-    if (!selectedImage) {
-      return;
-    }
-
-    const nextUrl = URL.createObjectURL(selectedImage);
-    setEditor((prev) => ({ ...prev, imageUrl: nextUrl }));
-
-    return () => {
-      URL.revokeObjectURL(nextUrl);
-    };
+    if (!selectedImage) return;
+    const url = URL.createObjectURL(selectedImage);
+    setProfile((prev) => ({ ...prev, imageUrl: url }));
+    return () => URL.revokeObjectURL(url);
   }, [selectedImage]);
 
-  const handleFieldChange = <K extends keyof ProfileData>(
-    key: K,
-    value: ProfileData[K],
-  ) => {
-    setEditor((prev) => ({ ...prev, [key]: value }));
+  // ── Handlers ───────────────────────────────────────────────────────────────
+  const handleFieldChange = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => {
+    setProfile((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleExperienceChange = (
-    index: number,
-    key: "role" | "company" | "meta",
-    value: string,
-  ) => {
-    setEditor((prev) => {
+  const handleExperienceChange = (index: number, key: "role" | "company" | "meta", value: string) => {
+    setProfile((prev) => {
       const next = [...prev.experience];
       next[index] = { ...next[index], [key]: value };
       return { ...prev, experience: next };
     });
   };
 
-  const handleEducationChange = (
-    index: number,
-    key: "title" | "school" | "meta",
-    value: string,
-  ) => {
-    setEditor((prev) => {
+  const handleEducationChange = (index: number, key: "title" | "school" | "meta", value: string) => {
+    setProfile((prev) => {
       const next = [...prev.education];
       next[index] = { ...next[index], [key]: value };
       return { ...prev, education: next };
     });
   };
 
-  const handleAddExperience = () => {
-    setEditor((prev) => ({
-      ...prev,
-      experience: [...prev.experience, { role: "", company: "", meta: "" }],
-    }));
-  };
+  const handleParseCV = async () => {
+    if (!cvFile) { setParseFeedback({ message: "", error: "Select a CV file first" }); return; }
+    if (!canUseCvParser) { setParseFeedback({ message: "", error: "Not enough CV tokens" }); return; }
 
-  const handleRemoveExperience = (index: number) => {
-    setEditor((prev) => ({
-      ...prev,
-      experience: prev.experience.filter((_, itemIndex) => itemIndex !== index),
-    }));
-  };
-
-  const handleAddEducation = () => {
-    setEditor((prev) => ({
-      ...prev,
-      education: [...prev.education, { title: "", school: "", meta: "" }],
-    }));
-  };
-
-  const handleRemoveEducation = (index: number) => {
-    setEditor((prev) => ({
-      ...prev,
-      education: prev.education.filter((_, itemIndex) => itemIndex !== index),
-    }));
-  };
-
-  const handleSaveProfile = () => {
-    setProfile(editor);
-    setSaveFeedback({ error: "", message: "Profile updates saved" });
-  };
-
-  const handleResetProfile = () => {
-    setEditor(profile);
-    setSaveFeedback({ error: "", message: "Changes reverted" });
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      setFeedback({ message: "", error: "Please select an image file first" });
-      return;
-    }
-
-    const allowedMimeTypes = ["image/jpeg", "image/png"];
-    if (!allowedMimeTypes.includes(file.type)) {
-      setFeedback({
-        message: "",
-        error: "Only JPG, JPEG, and PNG files are supported",
-      });
-      return;
-    }
-
-    const maxFileSize = 5 * 1024 * 1024;
-    if (file.size > maxFileSize) {
-      setFeedback({
-        message: "",
-        error: "Image size must be 5MB or less",
-      });
-      return;
-    }
-
-    setLoading((prev) => ({ ...prev, upload: true }));
-    setFeedback({ error: "", message: "" });
-
+    setLoading((p) => ({ ...p, parse: true }));
+    setParseFeedback({ error: "", message: "" });
     const formData = new FormData();
-    formData.append("image", file);
-
+    formData.append("file", cvFile);
     try {
-      const response = await fetch("/api/posts/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Image upload failed");
+      const res = await fetch("/api/posts/parse-cv", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("CV parsing failed");
+      const data = (await res.json()) as Partial<ProfileData>;
+      const fields: (keyof ProfileData)[] = ["name", "role", "location", "summary", "skills", "criteria", "experience", "education"];
+      for (const key of fields) {
+        if (data[key] !== undefined) handleFieldChange(key, data[key] as ProfileData[typeof key]);
       }
-
-      const data = (await response.json()) as { secure_url?: string };
-      if (!data.secure_url) {
-        throw new Error("Upload response missing image URL");
-      }
-
-      setImageUrl(data.secure_url);
-      setFeedback({ error: "", message: "Image uploaded successfully" });
+      setCvTokens((t) => t - CV_TOKEN_COST);
+      setParseFeedback({ error: "", message: "CV parsed — fields updated" });
     } catch (err) {
-      setFeedback({
-        message: "",
-        error: getErrorMessage(err, "Image upload failed. Please try again"),
-      });
+      setParseFeedback({ message: "", error: getErrorMessage(err, "CV parsing failed") });
     } finally {
-      setLoading((prev) => ({ ...prev, upload: false }));
+      setLoading((p) => ({ ...p, parse: false }));
     }
   };
 
-  const handleGenerate = async () => {
-    if (!targetJob.trim()) {
-      setFeedback({ message: "", error: "Target role is required" });
+  const handleGenerateCriteria = async () => {
+    if (!profile.role.trim()) {
+      setCriteriaFeedback({ message: "", error: "Fill in your role first" });
       return;
     }
-
-    setLoading((prev) => ({ ...prev, generate: true }));
-    setFeedback({ error: "", message: "" });
-
+    setLoading((p) => ({ ...p, generate: true }));
+    setCriteriaFeedback({ error: "", message: "" });
     try {
-      const response = await fetch("/api/posts/generate-criteria", {
+      const res = await fetch("/api/posts/generate-criteria", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetJob }),
+        body: JSON.stringify({ targetJob: profile.role }),
       });
-
-      if (!response.ok) {
-        throw new Error("Criteria generation failed");
-      }
-
-      const data = (await response.json()) as { criteria?: string[] };
-      setCriteria(data.criteria ?? ["", "", ""]);
-      setFeedback({ error: "", message: "Criteria generated successfully" });
+      if (!res.ok) throw new Error("Generation failed");
+      const data = (await res.json()) as { criteria?: string[] };
+      setProfile((prev) => ({ ...prev, criteria: data.criteria ?? ["", "", ""] }));
+      setCriteriaFeedback({ error: "", message: "Criteria generated" });
     } catch (err) {
-      setFeedback({ message: "", error: getErrorMessage(err) });
+      setCriteriaFeedback({ message: "", error: getErrorMessage(err) });
     } finally {
-      setLoading((prev) => ({ ...prev, generate: false }));
+      setLoading((p) => ({ ...p, generate: false }));
     }
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading((prev) => ({ ...prev, submit: true }));
-    setFeedback({ error: "", message: "" });
-
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading((p) => ({ ...p, submit: true }));
+    setPublishFeedback({ error: "", message: "" });
     try {
-      const payload = {
-        imageUrl,
-        targetJob,
-        criteria: criteria.map((item) => item.trim()),
-      };
-      const response = await fetch("/api/posts", {
+      const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          imageUrl: profile.imageUrl,
+          targetJob: profile.role,
+          criteria: profile.criteria.map((c) => c.trim()),
+        }),
       });
-
-      if (!response.ok) {
-        throw new Error("Publish failed");
-      }
-
-      const data = (await response.json()) as { remainingQuota?: number };
-      setQuota(data.remainingQuota ?? quota);
+      if (!res.ok) throw new Error("Publish failed");
+      const data = (await res.json()) as { remainingQuota?: number };
+      if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
+      setHasPublishedBefore(true);
       setPublished(true);
-      setFeedback({ error: "", message: "Profile published successfully" });
-
-      setImageUrl("");
-      setTargetJob("");
-      setCriteria(["", "", ""]);
-      setFile(null);
+      setPublishFeedback({ error: "", message: "Published successfully" });
     } catch (err) {
-      setFeedback({ message: "", error: getErrorMessage(err) });
+      setPublishFeedback({ message: "", error: getErrorMessage(err) });
     } finally {
-      setLoading((prev) => ({ ...prev, submit: false }));
+      setLoading((p) => ({ ...p, submit: false }));
     }
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-10 py-4">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto w-full max-w-3xl space-y-6 py-4">
+
+      {/* Header */}
+      <header className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">
-            Editor
-          </p>
-          <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-gray-900">
-            Profile Edit Studio
-          </h1>
-          <p className="mt-2 text-[11px] font-black uppercase tracking-[0.2em] text-gray-500">
-            Update your profile data and publish a new profile post from here.
-          </p>
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Studio</p>
+          <h1 className="text-2xl font-black tracking-tight text-gray-900">Edit Profile</h1>
         </div>
         <Link
           href="/profile"
-          className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 transition hover:border-indigo-300 hover:text-indigo-600"
+          className="group inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white/80 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-gray-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600"
         >
-          Back to Profile
-          <ArrowRight size={14} />
+          <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+          Back
         </Link>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <ProfileEditor
-          editor={editor}
-          isEditing
-          selectedImage={selectedImage}
-          onSelectImage={setSelectedImage}
-          onFieldChange={handleFieldChange}
-          onExperienceChange={handleExperienceChange}
-          onEducationChange={handleEducationChange}
-          onAddExperience={handleAddExperience}
-          onRemoveExperience={handleRemoveExperience}
-          onAddEducation={handleAddEducation}
-          onRemoveEducation={handleRemoveEducation}
+      {/* ── CV AI Parser ──────────────────────────────────────────────────────── */}
+      <GlassCard>
+        <SectionHead
+          icon={<FileText size={13} />}
+          label="CV AI Parser"
+          aside={<TokenBadge tokens={cvTokens} cost={CV_TOKEN_COST} label="CV tokens" />}
         />
-        <Panel className="flex flex-col justify-between gap-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">
-              Save changes
-            </p>
-            <h2 className="mt-3 text-2xl font-black uppercase tracking-tight text-gray-900">
-              Apply Profile Updates
-            </h2>
-            <p className="mt-4 text-sm font-semibold text-gray-600">
-              Review your edits, then save. You can always adjust the content
-              before publishing to the feed.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              className="w-full rounded-2xl bg-indigo-950 px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-950/20 transition hover:bg-indigo-900"
-            >
-              Save Profile
-            </button>
-            <button
-              type="button"
-              onClick={handleResetProfile}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
-            >
-              Reset Changes
-            </button>
-            <Notice message={saveFeedback.message} tone="success" />
-            <Notice message={saveFeedback.error} />
-          </div>
-        </Panel>
-      </section>
-
-      <section className="rounded-[32px] border border-dashed border-indigo-100 bg-indigo-50/60 p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">
-              Publish
-            </p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-gray-900">
-              Post to the rating feed
-            </h2>
-          </div>
-          <div className="flex gap-2 text-[9px] font-black uppercase">
-            <span className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-indigo-600">
-              Points: {quota}
-            </span>
-            <span className="rounded-full border border-rose-200 bg-white px-3 py-1 text-rose-600">
-              Cost: {uploadQuotaRequirement}
-            </span>
-          </div>
-        </div>
-        <p className="mt-4 text-sm font-semibold text-gray-600">
-          Upload a profile image, set a target role, and generate criteria.
-          Publish when you are ready.
+        <p className="mb-5 text-sm font-semibold leading-relaxed text-gray-400">
+          Upload your CV and AI will auto-fill the form fields below.{" "}
+          <span className="font-bold text-gray-500">Costs {CV_TOKEN_COST} CV tokens per parse.</span>
         </p>
-      </section>
 
-      {isLocked ? (
-        <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <Panel className="relative overflow-hidden p-10">
-            <div className="absolute top-0 right-0 p-10 opacity-5 text-gray-900">
-              <Lock size={200} />
-            </div>
-            <div className="relative z-10">
-              <span className="inline-block rounded-full border border-rose-200 bg-rose-950 px-4 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-rose-100 shadow-xl">
-                Posting Locked
-              </span>
-              <h2 className="mt-8 text-4xl font-black uppercase tracking-tighter leading-tight text-gray-900">
-                Complete {ratingsNeeded} <br />
-                More Ratings.
-              </h2>
+        <div
+          onClick={() => canUseCvParser && cvInputRef.current?.click()}
+          className={`group mb-4 flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-8 py-7 text-center transition-all ${
+            canUseCvParser
+              ? "cursor-pointer border-gray-200 bg-gray-50/60 hover:border-indigo-400 hover:bg-indigo-50/40"
+              : "cursor-not-allowed border-gray-100 bg-gray-50/30 opacity-40"
+          }`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-100 bg-white shadow-sm transition-transform group-hover:scale-105">
+            <FileText size={18} className="text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">
+              {cvFile ? cvFile.name : "Drop CV or click to browse"}
+            </p>
+            <p className="mt-1 text-[9px] font-bold text-gray-400">PDF, DOC, DOCX — max 10 MB</p>
+          </div>
+          <input
+            ref={cvInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+        </div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
-                    Quota
-                  </p>
-                  <p className="text-3xl font-black text-gray-900">{quota}</p>
-                </div>
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
-                    Threshold
-                  </p>
-                  <p className="text-3xl font-black text-gray-900">
-                    {uploadQuotaRequirement}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-indigo-950 p-6 shadow-xl">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400">
-                    Needed
-                  </p>
-                  <p className="text-3xl font-black text-white">
-                    {ratingsNeeded}
-                  </p>
-                </div>
-              </div>
-
-              <Link href="/feed" className="inline-block mt-10">
-                <span className="flex items-center gap-3 rounded-xl bg-indigo-950 px-10 py-4 text-[11px] font-black uppercase tracking-widest text-white">
-                  Go to Rating Feed
-                  <ArrowRight size={16} />
-                </span>
-              </Link>
-            </div>
-          </Panel>
-
-          <div className="rounded-[2.5rem] bg-indigo-950 p-8 text-white">
-            <span className="mb-8 block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
-              How to Unlock
+        <button
+          type="button"
+          onClick={handleParseCV}
+          disabled={loading.parse || !cvFile || !canUseCvParser}
+          className="w-full rounded-xl bg-indigo-950 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-900/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:translate-y-0 disabled:opacity-40"
+        >
+          {loading.parse ? (
+            <span className="flex items-center justify-center gap-2">
+              <Sparkles size={13} className="animate-pulse" /> Parsing...
             </span>
-            <div className="space-y-8">
-              {[
-                "Rate profiles in feed",
-                "Earn +1 quota per rating",
-                "Reach threshold",
-                "Publish profile",
-              ].map((step, index) => (
-                <div key={step} className="flex gap-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-800 text-[10px] font-black text-white">
-                    0{index + 1}
-                  </div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-200/60">
-                    {step}
-                  </p>
-                </div>
-              ))}
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <WandSparkles size={13} /> Parse with AI — {CV_TOKEN_COST} tokens
+            </span>
+          )}
+        </button>
+
+        {(parseFeedback.message || parseFeedback.error) && (
+          <div className="mt-4 space-y-2">
+            <Notice message={parseFeedback.message} tone="success" />
+            <Notice message={parseFeedback.error} />
+          </div>
+        )}
+      </GlassCard>
+
+      {/* ── Profile Form (criteria embedded inside) ───────────────────────────── */}
+      <ProfileEditor
+        editor={profile}
+        isEditing
+        selectedImage={selectedImage}
+        onSelectImage={setSelectedImage}
+        onFieldChange={handleFieldChange}
+        onExperienceChange={handleExperienceChange}
+        onEducationChange={handleEducationChange}
+        onAddExperience={() =>
+          setProfile((prev) => ({ ...prev, experience: [...prev.experience, { role: "", company: "", meta: "" }] }))
+        }
+        onRemoveExperience={(i) =>
+          setProfile((prev) => ({ ...prev, experience: prev.experience.filter((_, idx) => idx !== i) }))
+        }
+        onAddEducation={() =>
+          setProfile((prev) => ({ ...prev, education: [...prev.education, { title: "", school: "", meta: "" }] }))
+        }
+        onRemoveEducation={(i) =>
+          setProfile((prev) => ({ ...prev, education: prev.education.filter((_, idx) => idx !== i) }))
+        }
+        criteriaMode={criteriaMode}
+        onCriteriaModeChange={setCriteriaMode}
+        onGenerateCriteria={handleGenerateCriteria}
+        generatingCriteria={loading.generate}
+        criteriaFeedback={criteriaFeedback}
+      />
+
+      {/* ── Publish ───────────────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-4xl border border-indigo-950 bg-indigo-950 p-7 text-white shadow-2xl shadow-indigo-900/25">
+        <div className="pointer-events-none absolute right-0 top-0 p-6 opacity-5">
+          {canPublish ? <Send size={110} /> : <Lock size={110} />}
+        </div>
+
+        <div className="relative z-10">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Publish</p>
+              <h2 className="text-xl font-black tracking-tight text-white">Post to Feed</h2>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 text-[9px] font-black uppercase">
+              {canPublishFree ? (
+                <span className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-emerald-400">
+                  1 free post
+                </span>
+              ) : (
+                <>
+                  <span className="rounded-lg border border-indigo-700 bg-indigo-900/60 px-2.5 py-1 text-indigo-300">
+                    {ratingPoints} pts
+                  </span>
+                  <span className="rounded-lg border border-rose-900/40 bg-rose-900/20 px-2.5 py-1 text-rose-400">
+                    Cost {PUBLISH_COST}
+                  </span>
+                </>
+              )}
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <Panel className="p-8">
-            <span className="inline-block rounded-full border border-indigo-400/30 bg-indigo-950 px-4 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-100">
-              Profile Image Upload
-            </span>
-            <h2 className="mt-6 text-2xl font-black uppercase tracking-tighter text-gray-900">
-              Upload Image
-            </h2>
 
-            <label className="mt-8 block cursor-pointer rounded-4xl border-2 border-dashed border-gray-200 bg-slate-50 p-12 text-center transition-all hover:border-indigo-600">
-              <CloudUpload size={32} className="mx-auto mb-4 text-gray-300" />
-              <input
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={(event) => setFile(event.target.files?.[0] || null)}
-                className="hidden"
-              />
-              <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">
-                {file ? file.name : "Select image"}
-              </span>
-            </label>
-
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={loading.upload}
-              className="mt-6 w-full rounded-2xl bg-gray-950 py-4 text-[11px] font-black uppercase tracking-[0.3em] text-white"
-            >
-              {loading.upload ? "Uploading..." : "Upload image"}
-            </button>
-
-            {imageUrl && (
-              <div className="mt-6 overflow-hidden rounded-3xl border-4 border-white shadow-2xl">
-                <img
-                  src={imageUrl}
-                  className="h-64 w-full object-cover"
-                  alt="Preview"
-                />
-              </div>
-            )}
-          </Panel>
-
-          <Panel className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                  Setup
-                </span>
-                <div className="flex gap-2 text-[9px] font-black uppercase">
-                  <span className="rounded border border-indigo-100 bg-indigo-50 px-2 py-1 text-indigo-600">
-                    Points: {quota}
-                  </span>
-                  <span className="rounded border border-rose-100 bg-rose-50 px-2 py-1 text-rose-600">
-                    Cost: {uploadQuotaRequirement}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    Target Role
-                  </span>
-                  <div className="mt-1 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-4 transition-all focus-within:border-indigo-600">
-                    <Target size={18} className="text-gray-400" />
-                    <input
-                      value={targetJob}
-                      onChange={(event) => setTargetJob(event.target.value)}
-                      placeholder="e.g. Product Designer"
-                      className="w-full bg-transparent text-sm font-black uppercase text-gray-900 outline-none"
-                    />
-                  </div>
-                </label>
-
-                <div className="rounded-4xl bg-slate-900 p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <WandSparkles size={16} className="text-indigo-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
-                        Generate Criteria
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleGenerate}
-                      disabled={loading.generate}
-                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[9px] font-black uppercase hover:bg-indigo-500"
-                    >
-                      {loading.generate ? "Generating..." : "Generate"}
-                    </button>
+          {canPublish ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Criteria preview */}
+              {profile.criteria.some((c) => c.trim()) && (
+                <div>
+                  <p className="mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Criteria</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {profile.criteria.map((c, i) => (
+                      <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-[10px] font-bold text-indigo-200">
+                        {c || `—`}
+                      </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {criteria.map((item, index) => (
-                    <input
-                      key={index}
-                      value={item}
-                      onChange={(event) => {
-                        const next = [...criteria];
-                        next[index] = event.target.value;
-                        setCriteria(next);
-                      }}
-                      placeholder={`Criterion 0${index + 1}`}
-                      className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-black uppercase text-gray-900 outline-none focus:border-indigo-600"
-                    />
-                  ))}
+              {(publishFeedback.message || publishFeedback.error) && (
+                <div className="space-y-2">
+                  <Notice message={publishFeedback.message} tone="success" />
+                  <Notice message={publishFeedback.error} />
                 </div>
-              </div>
-
-              <Notice message={feedback.error} />
-              <Notice message={feedback.message} tone="success" />
+              )}
 
               <button
                 type="submit"
                 disabled={loading.submit || !canSubmit}
-                className="w-full rounded-4xl bg-indigo-950 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-2xl shadow-indigo-950/20 disabled:opacity-60"
+                className="w-full rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50 disabled:translate-y-0 disabled:opacity-50"
               >
-                {loading.submit ? "Publishing..." : "Publish Profile"}
+                {loading.submit ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Sparkles size={13} className="animate-pulse" /> Publishing...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Send size={13} /> Publish Profile
+                  </span>
+                )}
               </button>
+
+              {!canSubmit && (
+                <p className="text-center text-[9px] font-bold text-indigo-400/60">
+                  Fill in your role and set 3 criteria to publish
+                </p>
+              )}
 
               {published && (
                 <Link
                   href="/profile"
-                  className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline"
+                  className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-300 transition-colors hover:text-white"
                 >
-                  View Profile Dashboard <ArrowRight size={14} />
+                  View Profile <ArrowRight size={12} />
                 </Link>
               )}
             </form>
-          </Panel>
+          ) : (
+            <div className="space-y-5">
+              <div>
+                <div className="mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
+                  <span className="text-indigo-400">Ratings earned</span>
+                  <span className="text-white">{ratingPoints} / {PUBLISH_COST}</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-indigo-400 transition-all duration-700"
+                    style={{ width: `${Math.min((ratingPoints / PUBLISH_COST) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-xs font-bold text-indigo-200">
+                  Rate <span className="font-black text-white">{ratingsNeeded}</span> more profile{ratingsNeeded !== 1 ? "s" : ""} to unlock publishing.
+                </p>
+              </div>
+              <Link
+                href="/feed"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50"
+              >
+                Go Rate Profiles <ArrowRight size={13} />
+              </Link>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
     </div>
   );
 }

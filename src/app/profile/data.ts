@@ -21,6 +21,8 @@ export type ProfileData = {
   name: string;
   role: string;
   location: string;
+  email: string;
+  linkedin: string;
   summary: string;
   imageUrl: string;
   experience: Array<{ role: string; company: string; meta: string }>;
@@ -33,6 +35,8 @@ export const initialProfile: ProfileData = {
   name: "Alex Carter",
   role: dummyProfile.targetJob,
   location: contactInfo.location,
+  email: contactInfo.email,
+  linkedin: contactInfo.linkedin,
   summary: profileSummary.trim(),
   imageUrl: dummyProfile.image,
   experience: experienceItems.map((item) => ({
