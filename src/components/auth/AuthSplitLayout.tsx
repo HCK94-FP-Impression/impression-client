@@ -3,11 +3,11 @@ import type { ComponentType, ReactNode } from "react";
 type AuthSplitLayoutProps = {
   accentIcon?: ComponentType<{ size?: number; className?: string }>;
   leftBadge: string;
-  leftTitle: string;
-  leftDescription: string;
+  leftTitle: ReactNode;
+  leftDescription: ReactNode;
   highlights?: Array<{ icon: ReactNode; text: string }>;
-  rightTitle: string;
-  rightSubtitle: string;
+  rightTitle: ReactNode;
+  rightSubtitle: ReactNode;
   footer?: ReactNode;
   footerClassName?: string;
   children: ReactNode;
