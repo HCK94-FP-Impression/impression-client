@@ -22,7 +22,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   // dummy UI state
-  const isAuthenticated = true;
+  const isAuthenticated = false;
   const quota = 12;
   const appName = "Impression";
 
