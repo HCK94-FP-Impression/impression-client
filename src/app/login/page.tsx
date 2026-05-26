@@ -54,7 +54,7 @@ export default function LoginPage() {
       footer={
         <div className="space-y-3">
           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="text-indigo-600 hover:underline">
               Sign up
             </Link>

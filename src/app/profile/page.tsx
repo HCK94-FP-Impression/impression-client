@@ -29,6 +29,7 @@ import {
   type CriteriaScore,
 } from "./data";
 import ProfileRadar from "./components/radar";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const profile = initialProfile;
@@ -79,10 +80,12 @@ export default function ProfilePage() {
           <div className="relative z-10 flex flex-col sm:flex-row gap-7 items-center sm:items-start">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-indigo-200 via-violet-200 to-indigo-300 opacity-60 blur-sm" />
-              <img
+              <div className="absolute -inset-1 rounded-3xl bg-linear-to-br from-indigo-200 via-violet-200 to-indigo-300 opacity-60 blur-sm" />
+              <Image
                 src={profile.imageUrl}
                 alt={profile.name}
+                width={500}
+                height={500}
                 className="relative h-32 w-32 sm:h-36 sm:w-36 rounded-3xl object-cover border border-white shadow-md"
               />
             </div>
