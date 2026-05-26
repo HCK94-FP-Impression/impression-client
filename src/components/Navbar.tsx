@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ArrowUpRight, LogOut, Zap } from "lucide-react";
+import { clearAuthSession } from "@/constants/authProxy";
 
 const navLinkClassName = (
   pathname: string,
@@ -20,9 +21,15 @@ const navLinkClassName = (
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   // dummy UI state
   const isAuthenticated = true;
+
+  function handleLogout() {
+    clearAuthSession();
+    router.replace("/login");
+  }
   const quota = 12;
   const appName = "Impression";
 
@@ -99,6 +106,8 @@ export default function Navbar() {
 
               {/* Logout */}
               <button
+                type="button"
+                onClick={handleLogout}
                 className="rounded-xl p-2.5 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-600"
               >
                 <LogOut size={20} />

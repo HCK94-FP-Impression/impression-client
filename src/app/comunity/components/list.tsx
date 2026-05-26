@@ -1,23 +1,41 @@
 "use client";
 
-import { Users, Crown, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
-import type { Community, MembershipStatus } from "../data";
-import { DOMAIN_META, CURRENT_USER } from "../data";
+import { Users, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import type { CommunityItem, MembershipStatus } from "../types";
+import { DOMAIN_META } from "../data";
 
 type Props = {
-  communities: Community[];
+  communities: CommunityItem[];
   memberships: Record<number, MembershipStatus>;
+  joiningId?: number | null;
   onJoin: (id: number) => void;
   onViewDetail: (id: number) => void;
 };
 
-export default function CommunityExplore({ communities, memberships, onJoin, onViewDetail }: Props) {
+export default function CommunityExplore({
+  communities,
+  memberships,
+  joiningId,
+  onJoin,
+  onViewDetail,
+}: Props) {
+  if (communities.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <Users size={40} className="text-indigo-400/30" />
+        <p className="text-base font-black text-indigo-400/50">No communities found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {communities.map((c) => {
-        const status = memberships[c.id] ?? "none";
-        const domain = DOMAIN_META[c.domain] ?? { label: c.domain, pill: "border-gray-200 bg-gray-100 text-gray-500" };
-        const isLeader = c.leaderId === CURRENT_USER.id;
+        const status = memberships[c.id] ?? null;
+        const domain = DOMAIN_META[c.domain] ?? {
+          label: c.domain,
+          pill: "border-gray-200 bg-gray-100 text-gray-500",
+        };
 
         return (
           <div
@@ -26,14 +44,11 @@ export default function CommunityExplore({ communities, memberships, onJoin, onV
           >
             {/* Domain + Leader badge */}
             <div className="mb-4 flex items-start justify-between gap-2">
-              <span className={`rounded-xl border px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] ${domain.pill}`}>
+              <span
+                className={`rounded-xl border px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] ${domain.pill}`}
+              >
                 {domain.label}
               </span>
-              {isLeader && (
-                <span className="inline-flex items-center gap-1 rounded-xl border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-600">
-                  <Crown size={9} /> Leader
-                </span>
-              )}
             </div>
 
             {/* Name + Description */}
@@ -48,22 +63,30 @@ export default function CommunityExplore({ communities, memberships, onJoin, onV
             <div className="mb-5 flex items-center gap-4 border-t border-gray-100 pt-4">
               <div className="flex items-center gap-1.5">
                 <Users size={11} className="text-gray-400" />
-                <span className="text-[11px] font-bold text-gray-600">{c.memberCount} members</span>
+                <span className="text-[11px] font-bold text-gray-600">
+                  {c.memberCount} members
+                </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">by</span>
-                <span className="text-[11px] font-black text-indigo-600">@{c.leader.username}</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                  by
+                </span>
+                <span className="text-[11px] font-black text-indigo-600">
+                  @{c.leader.username}
+                </span>
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex gap-2">
-              {status === "none" && (
+              {status === null && (
                 <button
                   type="button"
                   onClick={() => onJoin(c.id)}
-                  className="flex-1 rounded-2xl bg-indigo-950 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800"
+                  disabled={joiningId === c.id}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-indigo-950 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
+                  {joiningId === c.id && <Loader2 size={11} className="animate-spin" />}
                   Join Community
                 </button>
               )}

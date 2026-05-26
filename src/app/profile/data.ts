@@ -1,15 +1,85 @@
-import {
-  certifications,
-  contactInfo,
-  dummyProfile,
-  educationItems,
-  experienceItems,
-  languages,
-  profileSummary,
-  projectItems,
-  skillItems,
-  strengths,
-} from "../feed/data";
+const profileSeed = {
+  image: "https://xsgames.co/randomusers/avatar.php?g=male",
+  targetJob: "SOFTWARE ENGINEER",
+  criteria: ["PROFESIONAL", "ADAPTIF", "KOMUNIKATIF"],
+};
+
+const educationItems = [
+  {
+    title: "Bachelor's in Electrical Engineering",
+    school: "Austrian Polytechnic Institute",
+    meta: "Top Tier - Class of 1878",
+  },
+];
+
+const profileSummary = `
+Experienced software engineer with strong focus on scalable frontend
+architecture, modern web technologies, and product-oriented development.
+Skilled in building performant applications with clean UI systems,
+maintainable code structure, and strong collaboration across teams.
+`;
+
+const projectItems = [
+  {
+    title: "AI Resume Analyzer Platform",
+    description:
+      "Built a resume screening platform with ATS scoring, profile matching, and recruiter analytics dashboard.",
+    stack: ["Next.js", "TypeScript", "Tailwind", "PostgreSQL"],
+    impact: "Increased recruiter screening speed by 48%",
+  },
+  {
+    title: "E-Wallet Mobile Application",
+    description:
+      "Developed secure financial transaction flows and real-time balance synchronization system.",
+    stack: ["React Native", "Redux", "Node.js"],
+    impact: "Handled 20k+ monthly transactions",
+  },
+];
+
+const certifications = [
+  "AWS Certified Cloud Practitioner",
+  "Google UX Design Professional",
+  "Meta Front-End Engineer",
+];
+
+const languages = [
+  { name: "English", level: "Professional" },
+  { name: "Indonesian", level: "Native" },
+];
+
+const strengths = [
+  "Problem Solving",
+  "System Design",
+  "Team Collaboration",
+  "Leadership",
+];
+
+const contactInfo = {
+  email: "alexcarter@example.com",
+  linkedin: "linkedin.com/in/alexcarter",
+  location: "San Francisco, California",
+};
+
+const experienceItems = [
+  {
+    role: "Chief Inventor & Founder",
+    company: "Tesla Electric Light & Manufacturing",
+    meta: "5 Years - Current",
+  },
+  {
+    role: "Electrical Engineer",
+    company: "Continental Edison Company",
+    meta: "2 Years - Paris, France",
+  },
+];
+
+const skillItems = [
+  "Power Systems",
+  "Renewable Energy",
+  "AC Current Design",
+  "Wireless Transmission",
+  "Electromagnetism",
+];
 
 export type CriteriaScore = {
   label: string;
@@ -33,12 +103,12 @@ export type ProfileData = {
 
 export const initialProfile: ProfileData = {
   name: "Alex Carter",
-  role: dummyProfile.targetJob,
+  role: profileSeed.targetJob,
   location: contactInfo.location,
   email: contactInfo.email,
   linkedin: contactInfo.linkedin,
   summary: profileSummary.trim(),
-  imageUrl: dummyProfile.image,
+  imageUrl: profileSeed.image,
   experience: experienceItems.map((item) => ({
     role: item.role,
     company: item.company,
@@ -50,7 +120,7 @@ export const initialProfile: ProfileData = {
     meta: item.meta,
   })),
   skills: [...skillItems],
-  criteria: [...dummyProfile.criteria],
+  criteria: [...profileSeed.criteria],
 };
 
 export const scoreData: CriteriaScore[] = [
