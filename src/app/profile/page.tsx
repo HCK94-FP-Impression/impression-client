@@ -61,11 +61,11 @@ export default function ProfilePage() {
 
         {/* Edit button — contrasting but tasteful */}
         <Link
-          href="/edit"
+          href="/studio"
           className="group self-start sm:self-auto inline-flex items-center gap-2 rounded-xl bg-indigo-950 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-900/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-xl hover:shadow-indigo-900/30"
         >
           <PencilLine size={13} className="transition-transform group-hover:rotate-12" />
-          Edit Profile
+          Edit Studio
         </Link>
       </div>
 

@@ -88,12 +88,12 @@ export default function Navbar() {
                 </span>
               </div>
 
-              {/* Upload */}
+              {/* Studio */}
               <Link
-                href="/upload"
+                href="/studio"
                 className="flex items-center gap-2 rounded-xl bg-indigo-950 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-900/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-900"
               >
-                Upload
+                Studio
                 <ArrowUpRight size={14} />
               </Link>
 
