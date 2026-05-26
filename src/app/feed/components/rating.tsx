@@ -16,9 +16,8 @@ export default function FeedRatingPanel({
 
   return (
     <section className="col-span-5">
-      <div className="flex h-full flex-col">
         <div className="mb-6">
-          <h2 className="font-sans text-3xl font-black tracking-tight text-[#0f141e]">
+          <h2 className="font-sans text-3xl font-black tracking-tight text-indigo-950">
             RATE THIS PROFILE
           </h2>
 
@@ -38,7 +37,7 @@ export default function FeedRatingPanel({
 
           <div className="h-0.5 w-full overflow-hidden rounded-full bg-gray-200">
             <div
-              className="h-full bg-[#1b2030] transition-all duration-300"
+              className="h-full bg-indigo-950 transition-all duration-300"
               style={{ width: `${(completed / scores.length) * 100}%` }}
             />
           </div>
@@ -48,7 +47,7 @@ export default function FeedRatingPanel({
           {dummyProfile.criteria.map((label, index) => (
             <div key={label}>
               <div>
-                <span className="inline-block rounded-lg bg-[#141923] px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] text-white">
+                <span className="inline-block rounded-lg bg-indigo-950 px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] text-indigo-200">
                   {label}
                 </span>
               </div>
@@ -64,13 +63,13 @@ export default function FeedRatingPanel({
                       onClick={() => onScoreChange(index, option.level)}
                       className={`group flex cursor-pointer flex-col items-center justify-center rounded-2xl border px-2 py-4 transition-all duration-200 ${
                         active
-                          ? "scale-[1.01] border-[#141923] bg-[#141923] text-white shadow-lg"
-                          : "border-gray-100 bg-white shadow-sm hover:border-gray-300"
+                          ? "scale-[1.01] border-indigo-950 bg-indigo-950 text-white shadow-lg"
+                          : "border-gray-100 bg-white shadow-sm hover:border-indigo-200"
                       }`}
                     >
                       <span
                         className={`text-[13px] font-black tracking-wide ${
-                          active ? "text-white" : "text-[#1e2533]"
+                          active ? "text-white" : "text-indigo-950"
                         }`}
                       >
                         {option.label}
@@ -93,7 +92,7 @@ export default function FeedRatingPanel({
 
         <div className="mt-6 space-y-4">
           {completed !== scores.length ? (
-            <div className="flex items-center justify-center gap-3 rounded-2xl bg-[#1c2230] py-5 text-center text-white shadow-md">
+            <div className="flex items-center justify-center gap-3 rounded-2xl bg-indigo-950 py-5 text-center text-white shadow-md">
               <Info size={14} className="text-indigo-400" />
 
               <span className="text-[11px] font-extrabold uppercase tracking-[0.2em]">
@@ -117,7 +116,6 @@ export default function FeedRatingPanel({
             Skip Profile
           </button>
         </div>
-      </div>
     </section>
   );
 }

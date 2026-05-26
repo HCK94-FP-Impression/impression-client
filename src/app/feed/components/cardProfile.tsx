@@ -58,7 +58,7 @@ function CollapsibleSection({
 }: CollapsibleSectionProps) {
   return (
     <details
-      className="group block overflow-hidden rounded-3xl border border-white/5 bg-[#111627]/90 p-6 shadow-xl"
+      className="group block overflow-hidden rounded-3xl border border-indigo-900/30 bg-indigo-900/40 p-6 shadow-xl"
       open
     >
       <summary className="flex cursor-pointer items-center justify-between list-none select-none [&::-webkit-details-marker]:hidden">
@@ -75,11 +75,11 @@ function CollapsibleSection({
         </div>
         <ChevronDown
           size={16}
-          className="text-slate-400 transition-transform duration-300 group-open:rotate-180"
+          className="text-indigo-300 transition-transform duration-300 group-open:rotate-180"
         />
       </summary>
 
-      <div className="mt-5 border-t border-white/5 pt-4">
+      <div className="mt-5 border-t border-indigo-900/30 pt-4">
         {children}
       </div>
     </details>
@@ -112,7 +112,7 @@ export default function FeedProfileCard({
         <button
           onClick={onToggleFlip}
           type="button"
-          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/90 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-[#141923] shadow-[0_12px_30px_-12px_rgba(15,23,42,0.5)] transition-all hover:-translate-y-0.5 hover:bg-white active:scale-[0.98]"
+          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/90 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-950 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.5)] transition-all hover:-translate-y-0.5 hover:bg-white active:scale-[0.98]"
         >
           {isFlipped ? (
             <>
@@ -138,7 +138,7 @@ export default function FeedProfileCard({
           
           {/* FRONT SIDE */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl bg-[#05070c] p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "pointer-events-none opacity-0" : "z-10 opacity-100"
             }`}
             style={{
@@ -146,7 +146,7 @@ export default function FeedProfileCard({
               WebkitBackfaceVisibility: "hidden",
             }}
           >
-            <div className="flex h-full flex-col justify-between rounded-2xl bg-black p-4">
+            <div className="flex h-full flex-col justify-between rounded-2xl bg-indigo-950 p-4">
               <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl bg-gray-900">
                 <img
                   src={dummyProfile.image}
@@ -156,7 +156,7 @@ export default function FeedProfileCard({
               </div>
 
               <div className="mt-4 text-white">
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#3b4363]">
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-400">
                   TARGET ROLE
                 </span>
                 <h1 className="mt-2 font-sans text-5xl font-extrabold tracking-tight text-white">
@@ -181,7 +181,7 @@ export default function FeedProfileCard({
 
           {/* BACK SIDE (CV Details) */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl border border-white/5 bg-[#0a0d17] p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl border border-indigo-900/30 bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "z-20 opacity-100" : "pointer-events-none opacity-0"
             }`}
             style={{
@@ -196,7 +196,7 @@ export default function FeedProfileCard({
               <div className="space-y-5">
                 
                 {/* Header Card (Profil, Info Kontak, & Radar Sejajar) */}
-                <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-[#111627]/95 to-[#141b35]/80 p-6 shadow-xl">
+                <div className="relative overflow-hidden rounded-3xl border border-indigo-900/30 bg-linear-to-br from-indigo-900/50 to-indigo-900/70 p-6 shadow-xl">
                   <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
 
                   {/* Pembagian Grid 2 Kolom Kiri & Kanan */}
@@ -215,7 +215,7 @@ export default function FeedProfileCard({
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-2xl font-black tracking-tight text-white bg-clip-text bg-linear-to-r from-white via-slate-100 to-slate-300">
+                          <h2 className="text-2xl font-black tracking-tight text-white bg-clip-text bg-linear-to-r from-white via-indigo-100 to-indigo-200">
                             Alex Carter
                           </h2>
                           <p className="mt-1 text-xs font-bold tracking-wide text-transparent bg-clip-text bg-indigo-400">
@@ -235,10 +235,10 @@ export default function FeedProfileCard({
                             key={item.label}
                             className="flex items-center justify-between rounded-xl border border-white/5 bg-black/30 px-3.5 py-2.5"
                           >
-                            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-indigo-400">
                               {item.label}
                             </span>
-                            <span className="truncate text-xs font-medium text-slate-300 select-all max-w-[70%] text-right">
+                            <span className="truncate text-xs font-medium text-indigo-200 select-all max-w-[70%] text-right">
                               {item.value}
                             </span>
                           </div>
@@ -249,7 +249,7 @@ export default function FeedProfileCard({
 
                     {/* KOLOM KANAN (Performance Radar) */}
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-black/40 p-5 shadow-inner md:col-span-5 min-w-[220px]">
-                      <span className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                      <span className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400">
                         PERFORMANCE RADAR
                       </span>
 
@@ -311,7 +311,7 @@ export default function FeedProfileCard({
 
                         {/* Axis labels + conditional percentages */}
                         <div className="absolute left-1/2 -top-4.5 -translate-x-1/2 text-center">
-                          <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[0]}</p>
+                          <p className="text-[7px] font-black uppercase tracking-widest text-indigo-300">{dummyProfile.criteria[0]}</p>
                           {activePct && (
                             <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
                               {activePct[0]}%
@@ -319,7 +319,7 @@ export default function FeedProfileCard({
                           )}
                         </div>
                         <div className="absolute bottom-0 -right-2.5 text-right">
-                          <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[1]}</p>
+                          <p className="text-[7px] font-black uppercase tracking-widest text-indigo-300">{dummyProfile.criteria[1]}</p>
                           {activePct && (
                             <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
                               {activePct[1]}%
@@ -327,7 +327,7 @@ export default function FeedProfileCard({
                           )}
                         </div>
                         <div className="absolute bottom-0 -left-2.5 text-left">
-                          <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">{dummyProfile.criteria[2]}</p>
+                          <p className="text-[7px] font-black uppercase tracking-widest text-indigo-300">{dummyProfile.criteria[2]}</p>
                           {activePct && (
                             <span className={`text-[9px] font-black ${activeRadar === "sosial" ? "text-cyan-400" : "text-indigo-300"}`}>
                               {activePct[2]}%
@@ -350,7 +350,7 @@ export default function FeedProfileCard({
                                 isActive
                                   ? isCyan ? "text-cyan-400 bg-cyan-400/10 ring-1 ring-cyan-400/30"
                                            : "text-indigo-300 bg-indigo-400/10 ring-1 ring-indigo-400/30"
-                                  : "text-slate-500 hover:text-slate-300"
+                                  : "text-indigo-400/60 hover:text-indigo-200"
                               }`}
                             >
                               <span className={`h-1.5 w-1.5 rounded-full transition-transform duration-200 ${
@@ -368,7 +368,7 @@ export default function FeedProfileCard({
 
                 {/* --- Section Details di bawahnya tetap sama dan rapi --- */}
                 <CollapsibleSection title="Professional Summary" subtitle="Candidate Overview" icon={FileText} iconColorClass="text-indigo-300" borderColorClass="border-indigo-500/20" bgColorClass="bg-indigo-500/10">
-                  <p className="text-xs font-medium leading-6 text-slate-300/95 sm:text-sm sm:leading-7">{profileSummary}</p>
+                  <p className="text-xs font-medium leading-6 text-indigo-200/95 sm:text-sm sm:leading-7">{profileSummary}</p>
                 </CollapsibleSection>
 
                 <CollapsibleSection title="Work Experience" subtitle="Career Journey" icon={BriefcaseBusiness} iconColorClass="text-violet-300" borderColorClass="border-violet-500/20" bgColorClass="bg-violet-500/10">
@@ -378,7 +378,7 @@ export default function FeedProfileCard({
                         <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
                           <div>
                             <h4 className="text-base font-bold text-white">{item.role}</h4>
-                            <p className="mt-1 text-xs font-medium text-slate-400">{item.company}</p>
+                            <p className="mt-1 text-xs font-medium text-indigo-300">{item.company}</p>
                           </div>
                           <span className="self-start whitespace-nowrap rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-violet-300 sm:self-auto">
                             {item.meta}
@@ -396,7 +396,7 @@ export default function FeedProfileCard({
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-2">
                             <h4 className="text-base font-bold text-white">{project.title}</h4>
-                            <p className="text-xs font-medium leading-5 text-slate-400">{project.description}</p>
+                            <p className="text-xs font-medium leading-5 text-indigo-300">{project.description}</p>
                           </div>
                           <div className="shrink-0 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-right">
                             <p className="text-[7px] font-black uppercase tracking-[0.2em] text-emerald-400/70">IMPACT</p>
@@ -405,7 +405,7 @@ export default function FeedProfileCard({
                         </div>
                         <div className="mt-4 flex flex-wrap gap-1.5">
                           {project.stack.map((tech) => (
-                            <span key={tech} className="rounded-lg border border-white/5 bg-white/[0.04] px-2.5 py-1 text-[8px] font-bold text-slate-300">
+                            <span key={tech} className="rounded-lg border border-white/5 bg-white/[0.04] px-2.5 py-1 text-[8px] font-bold text-indigo-200">
                               {tech}
                             </span>
                           ))}
@@ -421,7 +421,7 @@ export default function FeedProfileCard({
                       {educationItems.map((item) => (
                         <div key={item.title} className="rounded-xl border border-white/5 bg-black/30 p-4">
                           <h5 className="text-xs font-bold text-white">{item.title}</h5>
-                          <p className="mt-1 text-[11px] font-medium text-slate-400">{item.school}</p>
+                          <p className="mt-1 text-[11px] font-medium text-indigo-300">{item.school}</p>
                           <span className="mt-2 inline-block rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black text-emerald-400">
                             {item.meta}
                           </span>
@@ -435,7 +435,7 @@ export default function FeedProfileCard({
                       {certifications.map((item) => (
                         <div key={item} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-black/30 px-4 py-2.5">
                           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                          <p className="text-xs font-semibold text-slate-200">{item}</p>
+                          <p className="text-xs font-semibold text-indigo-100">{item}</p>
                         </div>
                       ))}
                     </div>
@@ -445,7 +445,7 @@ export default function FeedProfileCard({
                 <CollapsibleSection title="Skills & Languages" subtitle="Proficiencies" icon={Target} iconColorClass="text-indigo-300" borderColorClass="border-indigo-500/20" bgColorClass="bg-indigo-500/10">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <h4 className="mb-3 text-xs font-bold text-slate-400">Core Strengths</h4>
+                      <h4 className="mb-3 text-xs font-bold text-indigo-300">Core Strengths</h4>
                       <div className="mb-3 flex flex-wrap gap-1.5">
                         {strengths.map((item) => (
                           <span key={item} className="rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-[9px] font-bold text-indigo-300">
@@ -463,18 +463,18 @@ export default function FeedProfileCard({
                     </div>
 
                     <div className="space-y-3 border-t border-white/5 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-                      <h4 className="text-xs font-bold text-slate-400">Languages</h4>
+                      <h4 className="text-xs font-bold text-indigo-300">Languages</h4>
                       {languages.map((item) => {
                         const widthValue = languageScores[item.level] || "70%";
                         return (
                           <div key={item.name} className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-slate-200">{item.name}</span>
+                              <span className="font-bold text-indigo-100">{item.name}</span>
                               <span className="text-[9px] font-bold text-indigo-400">{item.level}</span>
                             </div>
                             <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
                               <div
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-400 w-[var(--progress)]"
+                                className="h-full bg-indigo-500  w-[var(--progress)]"
                                 style={{ ["--progress" as string]: widthValue }}
                               />
                             </div>

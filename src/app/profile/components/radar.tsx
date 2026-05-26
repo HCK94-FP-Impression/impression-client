@@ -8,19 +8,17 @@ type Category = "sosial" | "profesional";
 
 const AXES = ["Profesional", "Adaptif", "Komunikatif"] as const;
 
-// Vertex positions for each polygon in SVG viewBox (100×100)
 const SOSIAL_PTS = [
-  { cx: 50, cy: 25 }, // top
-  { cx: 78, cy: 68 }, // bottom-right
-  { cx: 20, cy: 68 }, // bottom-left
+  { cx: 50, cy: 25 },
+  { cx: 78, cy: 68 },
+  { cx: 20, cy: 68 },
 ];
 const PROFESIONAL_PTS = [
-  { cx: 50, cy: 15 }, // top
-  { cx: 70, cy: 62 }, // bottom-right
-  { cx: 30, cy: 62 }, // bottom-left
+  { cx: 50, cy: 15 },
+  { cx: 70, cy: 62 },
+  { cx: 30, cy: 62 },
 ];
 
-// Label anchor offsets (in the relative container, not SVG units)
 const LABEL_POSITIONS = [
   { top: "-24px", left: "50%", transform: "translateX(-50%)", textAlign: "center" as const },
   { bottom: "4px",  right: "-52px", textAlign: "right" as const },
@@ -33,32 +31,32 @@ export default function ProfileRadar() {
   const socialPct  = socialScores.map((s) => Math.round((s / 3) * 100));
   const profPct    = professionalScores.map((s) => Math.round((s / 3) * 100));
   const activePct  = active === "sosial" ? socialPct : active === "profesional" ? profPct : null;
-  const activeColor = active === "sosial" ? "text-cyan-500" : "text-indigo-600";
+  const activeColor = active === "sosial" ? "text-cyan-400" : "text-indigo-300";
 
   const toggle = (cat: Category) =>
     setActive((prev) => (prev === cat ? null : cat));
 
   return (
-    <div className="lg:col-span-4 flex flex-col items-center rounded-[2rem] border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+    <div className="lg:col-span-4 flex flex-col items-center rounded-4xl border border-indigo-950 bg-indigo-950 p-7 shadow-xl shadow-indigo-900/20">
 
       {/* Header */}
       <div className="mb-4 flex w-full items-center justify-between">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
           Performance Radar
         </p>
-        <Zap size={13} className="text-indigo-500" />
+        <Zap size={13} className="text-indigo-400" />
       </div>
 
       {/* SVG Radar */}
       <div className="relative my-3 flex h-44 w-44 items-center justify-center">
         <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible">
           {/* Grid rings */}
-          <polygon points="50,10 85,75 15,75" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
-          <polygon points="50,32 72.5,64 27.5,64" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="0.75" />
+          <polygon points="50,10 85,75 15,75" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          <polygon points="50,32 72.5,64 27.5,64" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.75" />
           {/* Axis lines */}
-          <line x1="50" y1="53" x2="50" y2="10"  stroke="rgba(0,0,0,0.08)" strokeWidth="0.75" strokeDasharray="2" />
-          <line x1="50" y1="53" x2="85" y2="75"  stroke="rgba(0,0,0,0.08)" strokeWidth="0.75" strokeDasharray="2" />
-          <line x1="50" y1="53" x2="15" y2="75"  stroke="rgba(0,0,0,0.08)" strokeWidth="0.75" strokeDasharray="2" />
+          <line x1="50" y1="53" x2="50" y2="10"  stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
+          <line x1="50" y1="53" x2="85" y2="75"  stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
+          <line x1="50" y1="53" x2="15" y2="75"  stroke="rgba(255,255,255,0.12)" strokeWidth="0.75" strokeDasharray="2" />
 
           {/* Sosial polygon */}
           <polygon
@@ -112,7 +110,7 @@ export default function ProfileRadar() {
             className="absolute pointer-events-none"
             style={{ ...LABEL_POSITIONS[i] }}
           >
-            <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">
+            <p className="text-[8px] font-black uppercase tracking-widest text-indigo-400">
               {axis}
             </p>
             {activePct && (
@@ -140,9 +138,9 @@ export default function ProfileRadar() {
               className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-widest transition-all duration-200 ${
                 isActive
                   ? isCyan
-                    ? "bg-cyan-50 text-cyan-600 ring-1 ring-cyan-200"
-                    : "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200"
-                  : "text-gray-400 hover:text-gray-600"
+                    ? "bg-cyan-400/10 text-cyan-400 ring-1 ring-cyan-400/30"
+                    : "bg-indigo-400/10 text-indigo-300 ring-1 ring-indigo-400/30"
+                  : "text-indigo-400/60 hover:text-indigo-200"
               }`}
             >
               <span
@@ -157,7 +155,7 @@ export default function ProfileRadar() {
       </div>
 
       {!active && (
-        <p className="mt-2 text-[8px] font-bold uppercase tracking-widest text-gray-300">
+        <p className="mt-2 text-[8px] font-bold uppercase tracking-widest text-indigo-400/40">
           Klik legend untuk melihat skor
         </p>
       )}
