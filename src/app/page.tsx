@@ -27,7 +27,7 @@ export default function Home() {
     <div className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl sm:p-12">
+        <section className="relative overflow-hidden rounded-4xl border border-white/60 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl sm:p-12">
           {/* Background Blur */}
           <div className="absolute -left-24 -top-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
 
@@ -75,7 +75,7 @@ export default function Home() {
         {/* Right Cards */}
         <div className="grid gap-6">
           {/* Access Mode */}
-          <section className="rounded-[2rem] border border-indigo-100 bg-white/80 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+          <section className="rounded-4xl border border-indigo-100 bg-white/80 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                 Access Mode
@@ -96,7 +96,7 @@ export default function Home() {
           </section>
 
           {/* Quota */}
-          <section className="group relative overflow-hidden rounded-[2rem] border border-indigo-950 bg-indigo-950 p-8 text-white shadow-2xl shadow-indigo-900/20">
+          <section className="group relative overflow-hidden rounded-4xl border border-indigo-950 bg-indigo-950 p-8 text-white shadow-2xl shadow-indigo-900/20">
             <div className="absolute right-0 top-0 p-6 opacity-10 transition-opacity group-hover:opacity-20">
               <Zap size={80} fill="currentColor" />
             </div>
@@ -133,7 +133,7 @@ export default function Home() {
       {/* Bottom Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Steps */}
-        <section className="rounded-[2rem] border border-white/60 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+        <section className="rounded-4xl border border-white/60 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
           <header className="mb-8">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
               <BarChart3 size={14} />
@@ -148,7 +148,7 @@ export default function Home() {
           <div className="space-y-6">
             {landingSteps.map((step, index) => (
               <div key={index} className="group flex gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-950 text-xs font-black text-white">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-950 text-xs font-black text-white">
                   0{index + 1}
                 </div>
 
@@ -161,7 +161,7 @@ export default function Home() {
         </section>
 
         {/* Insight */}
-        <section className="flex flex-col justify-between rounded-[2rem] border-2 border-dashed border-indigo-200 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+        <section className="flex flex-col justify-between rounded-4xl border-2 border-dashed border-indigo-200 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
           <header>
             <div className="mb-4 flex items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-lg bg-fuchsia-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-fuchsia-700">
