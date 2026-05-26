@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
+import { AxiosError } from "axios";
+import { api, ApiErrorData } from "@/constants/constants";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -22,21 +25,33 @@ export default function RegisterPage() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter()
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      setLoading(false);
-    }, 1200);
+    try {
+      const res = await api.post('/auth/register', form)
+      if (res.status === 201) {
+        setSuccess(res.data.message)
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
+        
+      }
+    } catch (e) {
+      setError((e as AxiosError<ApiErrorData>).response?.data.message || 'An error occured. Please try again.')
+      setLoading(false)
+    }
   };
 
   return (
@@ -121,6 +136,15 @@ export default function RegisterPage() {
             <AlertCircle size={14} />
             <span className="text-[9px] font-black uppercase tracking-widest leading-tight">
               {error}
+            </span>
+          </div>
+        ) : null}
+
+        {success ? (
+          <div className="flex items-center gap-3 rounded-xl border-emerald-100 bg-emerald-50 p-3 text-emerald-600">
+            <AlertCircle size={14} />
+            <span className="text-[9px] font-black uppercase tracking-widest leading-tight">
+              {success}
             </span>
           </div>
         ) : null}
