@@ -28,7 +28,7 @@ import {
   profileReference,
   type CriteriaScore,
 } from "./data";
-import ProfileRadar from "./components/ProfileRadar";
+import ProfileRadar from "./components/radar";
 
 export default function ProfilePage() {
   const profile = initialProfile;
@@ -85,13 +85,6 @@ export default function ProfilePage() {
                 alt={profile.name}
                 className="relative h-32 w-32 sm:h-36 sm:w-36 rounded-3xl object-cover border border-white shadow-md"
               />
-              <div className="absolute -bottom-2 -right-2 flex items-center gap-1 rounded-full bg-white border border-gray-100 px-2 py-1 shadow-sm">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-wider text-gray-500">Active</span>
-              </div>
             </div>
 
             {/* Info */}
@@ -195,27 +188,27 @@ export default function ProfilePage() {
         <ProfileRadar />
 
         {/* 4. DETAILED METRICS — col 4 */}
-        <div className="lg:col-span-4 rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl flex flex-col">
-          <p className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
-            <TrendingUp size={12} className="text-indigo-500" />
+        <div className="lg:col-span-4 rounded-4xl border border-indigo-950 bg-indigo-950 p-7 shadow-xl shadow-indigo-900/20 flex flex-col">
+          <p className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
+            <TrendingUp size={12} className="text-indigo-400" />
             Detailed Metrics
           </p>
           <div className="flex flex-1 flex-col justify-center space-y-5">
             {scoreData.map((item: CriteriaScore, i) => {
               const pct = (item.score / item.max) * 100;
               const bars = [
-                { track: "bg-indigo-100", fill: "bg-indigo-500" },
-                { track: "bg-violet-100", fill: "bg-violet-500" },
-                { track: "bg-cyan-100",   fill: "bg-cyan-500" },
+                { track: "bg-white/10", fill: "bg-indigo-400" },
+                { track: "bg-white/10", fill: "bg-violet-400" },
+                { track: "bg-white/10", fill: "bg-cyan-400" },
               ];
               const bar = bars[i % bars.length];
               return (
                 <div key={item.label} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-700">{item.label}</span>
-                    <span className="text-xs font-black text-gray-900">
+                    <span className="text-xs font-bold text-indigo-200">{item.label}</span>
+                    <span className="text-xs font-black text-white">
                       {item.score.toFixed(1)}{" "}
-                      <span className="font-bold text-gray-400">/ {item.max}</span>
+                      <span className="font-bold text-indigo-400/60">/ {item.max}</span>
                     </span>
                   </div>
                   <div className={`h-1.5 w-full overflow-hidden rounded-full ${bar.track}`}>
@@ -250,23 +243,23 @@ export default function ProfilePage() {
         </div>
 
         {/* 6. CAREER JOURNEY — col 6 */}
-        <div className="lg:col-span-6 rounded-4xl border border-white/60 bg-white/70 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+        <div className="lg:col-span-6 rounded-4xl border border-indigo-950 bg-indigo-950 p-8 shadow-xl shadow-indigo-900/20">
           <div className="mb-7 flex items-center gap-2">
-            <BriefcaseBusiness size={13} className="text-gray-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+            <BriefcaseBusiness size={13} className="text-indigo-400" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
               Career Journey
             </p>
           </div>
-          <div className="relative space-y-5 before:absolute before:left-5 before:top-0 before:h-full before:w-px before:bg-gradient-to-b before:from-indigo-300 before:via-indigo-100 before:to-transparent">
+          <div className="relative space-y-5 before:absolute before:left-5 before:top-0 before:h-full before:w-px before:bg-linear-to-b before:from-indigo-500 before:via-indigo-800 before:to-transparent">
             {profile.experience.map((item, index) => (
               <div key={item.role} className="group relative flex items-start gap-5">
-                <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-950 text-[10px] font-black text-white shadow-sm transition-all group-hover:bg-indigo-950">
+                <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-900 text-[10px] font-black text-white shadow-sm transition-all group-hover:bg-indigo-800">
                   {String(index + 1).padStart(2, "0")}
                 </div>
                 <div className="flex-1 pb-2 transition-transform group-hover:translate-x-0.5">
-                  <h4 className="text-sm font-black text-gray-900">{item.role}</h4>
-                  <p className="mt-0.5 text-[11px] font-bold text-indigo-600">{item.company}</p>
-                  <p className="mt-1 text-[10px] font-bold text-gray-400">{item.meta}</p>
+                  <h4 className="text-sm font-black text-white">{item.role}</h4>
+                  <p className="mt-0.5 text-[11px] font-bold text-indigo-400">{item.company}</p>
+                  <p className="mt-1 text-[10px] font-bold text-indigo-400/60">{item.meta}</p>
                 </div>
               </div>
             ))}
@@ -313,17 +306,17 @@ export default function ProfilePage() {
         </div>
 
         {/* 8. EDUCATION — col 4 */}
-        <div className="lg:col-span-4 rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+        <div className="lg:col-span-4 rounded-4xl border border-indigo-950 bg-indigo-950 p-7 shadow-xl shadow-indigo-900/20">
           <div className="mb-5 flex items-center gap-2">
-            <GraduationCap size={13} className="text-gray-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Education</p>
+            <GraduationCap size={13} className="text-indigo-400" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Education</p>
           </div>
           <div className="space-y-3">
             {profile.education.map((item) => (
-              <div key={item.title} className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-                <h5 className="text-sm font-black text-gray-900 leading-tight">{item.title}</h5>
-                <p className="mt-1 text-[11px] font-bold text-gray-500">{item.school}</p>
-                <span className="mt-2 inline-block rounded-lg border border-cyan-200 bg-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-600">
+              <div key={item.title} className="rounded-2xl border border-indigo-900/30 bg-indigo-900/40 p-4">
+                <h5 className="text-sm font-black text-white leading-tight">{item.title}</h5>
+                <p className="mt-1 text-[11px] font-bold text-indigo-300">{item.school}</p>
+                <span className="mt-2 inline-block rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-400">
                   {item.meta}
                 </span>
               </div>
@@ -331,14 +324,14 @@ export default function ProfilePage() {
           </div>
 
           {/* Core Strengths */}
-          <div className="mt-6 border-t border-gray-100 pt-5">
+          <div className="mt-6 border-t border-indigo-900/30 pt-5">
             <div className="mb-3 flex items-center gap-2">
-              <Layers size={12} className="text-gray-400" />
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Core Strengths</p>
+              <Layers size={12} className="text-indigo-400" />
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400">Core Strengths</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {profileStrengths.map((s) => (
-                <span key={s} className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-600">
+                <span key={s} className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-[10px] font-bold text-indigo-300">
                   {s}
                 </span>
               ))}
@@ -363,10 +356,10 @@ export default function ProfilePage() {
         </div>
 
         {/* 10. LANGUAGES — col 4 */}
-        <div className="lg:col-span-4 rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+        <div className="lg:col-span-4 rounded-4xl border border-indigo-950 bg-indigo-950 p-7 shadow-xl shadow-indigo-900/20">
           <div className="mb-5 flex items-center gap-2">
-            <Languages size={13} className="text-gray-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Languages</p>
+            <Languages size={13} className="text-indigo-400" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Languages</p>
           </div>
           <div className="space-y-4">
             {profileReference.languages.map((lang) => {
@@ -374,14 +367,14 @@ export default function ProfilePage() {
               return (
                 <div key={lang.name} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-gray-900">{lang.name}</span>
-                    <span className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-600">
+                    <span className="text-sm font-black text-white">{lang.name}</span>
+                    <span className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-300">
                       {lang.level}
                     </span>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-linear-to-r from-indigo-500 to-violet-400"
+                      className="h-full rounded-full bg-linear-to-r from-indigo-400 to-violet-400"
                       style={{ width }}
                     />
                   </div>
