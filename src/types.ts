@@ -69,3 +69,10 @@ export type SubmitRatingResponse = {
   message: string;
 };
 
+export type CurrentUser = {
+  id: number;
+  username: string;
+  email: string;
+  quota: number;
+  role: "job_seeker" | "recruiter";
+};

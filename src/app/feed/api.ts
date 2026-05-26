@@ -1,5 +1,6 @@
 import { api } from "@/constants/constants";
 import type {
+  CurrentUser,
   FeedResponse,
   SubmitRatingPayload,
   SubmitRatingResponse,

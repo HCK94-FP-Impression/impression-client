@@ -6,19 +6,14 @@ import { useRouter } from "next/navigation";
 import FeedProfileCard from "./components/cardProfile";
 import FeedRatingPanel from "./components/rating";
 import FeedInsightPanel from "./components/insight";
-import {
-  getFeedPost,
-  submitRating,
-  getCurrentUser,
-  getMyTargetJob,
-} from "./api";
+import { getFeedPost, submitRating, getCurrentUser, getMyTargetJob } from "./api";
 import { getApiErrorMessage } from "@/constants/constants";
 import {
   isUnauthorizedError,
   redirectToLogin,
   requireClientAuth,
 } from "@/constants/authProxy";
-import type { FeedResponse } from "../../types";
+import type { FeedResponse } from "./types";
 
 type FeedbackState = {
   message: string;
