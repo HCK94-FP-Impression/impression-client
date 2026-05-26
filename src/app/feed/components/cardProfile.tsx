@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
@@ -13,11 +14,8 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
-import type {
-  FeedCvItem,
-  FeedPost,
-  FeedRatingCriterion,
-} from "../types";
+import type { FeedCvItem, FeedPost } from "../types";
+import PerformanceRadar, { type RadarCategory } from "./performanceRadar";
 
 type FeedProfileCardProps = {
   post: FeedPost;
@@ -30,12 +28,11 @@ type CollapsibleSectionProps = {
   subtitle: string;
   icon: LucideIcon;
   iconColorClass: string;
+  subtitleColorClass: string;
   borderColorClass: string;
   bgColorClass: string;
   children: ReactNode;
 };
-
-const FALLBACK_IMAGE = "https://xsgames.co/randomusers/avatar.php?g=male";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -59,11 +56,8 @@ function itemField(item: FeedCvItem, keys: string[], fallback = "") {
   return fallback;
 }
 
-function formatRatingAverage(criteria: FeedRatingCriterion[]) {
-  if (!criteria.length) return "0.00";
-
-  const sum = criteria.reduce((total, item) => total + item.average, 0);
-  return (sum / criteria.length).toFixed(2);
+function userInitial(username: string) {
+  return username.slice(0, 1).toUpperCase() || "?";
 }
 
 function CollapsibleSection({
@@ -71,117 +65,49 @@ function CollapsibleSection({
   subtitle,
   icon: Icon,
   iconColorClass,
+  subtitleColorClass,
   borderColorClass,
   bgColorClass,
   children,
 }: CollapsibleSectionProps) {
   return (
     <details
-      className="group block overflow-hidden rounded-3xl border border-indigo-900/30 bg-indigo-900/40 p-6 shadow-xl"
+      className="group block overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent p-6 shadow-xl backdrop-blur-sm transition-all duration-300 hover:border-white/10"
       open
     >
-      <summary className="flex cursor-pointer select-none items-center justify-between list-none [&::-webkit-details-marker]:hidden">
-        <div className="flex items-center gap-3">
+      <summary className="flex cursor-pointer select-none items-center justify-between list-none rounded-lg outline-none transition-colors [&::-webkit-details-marker]:hidden">
+        <div className="flex items-center gap-3.5">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-xl border ${borderColorClass} ${bgColorClass}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-2xl border shadow-inner ${borderColorClass} ${bgColorClass}`}
           >
-            <Icon size={15} className={iconColorClass} />
+            <Icon size={16} className={iconColorClass} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">{title}</h3>
-            <p className={`text-[9px] uppercase tracking-[0.2em] ${iconColorClass}/60`}>
+            <h3 className="text-sm font-bold tracking-wide text-white">{title}</h3>
+            <p className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] ${subtitleColorClass}`}>
               {subtitle}
             </p>
           </div>
         </div>
-        <ChevronDown
-          size={16}
-          className="text-indigo-300 transition-transform duration-300 group-open:rotate-180"
-        />
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 transition-colors group-hover:bg-white/10">
+          <ChevronDown
+            size={16}
+            className="text-indigo-300 transition-transform duration-500 group-open:rotate-180"
+          />
+        </div>
       </summary>
 
-      <div className="mt-5 border-t border-indigo-900/30 pt-4">{children}</div>
+      <div className="mt-5 border-t border-white/5 pt-5 opacity-0 transition-opacity duration-300 group-open:opacity-100">
+        {children}
+      </div>
     </details>
   );
 }
 
 function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-2xl border border-white/5 bg-black/20 px-4 py-3 text-xs font-semibold text-indigo-300/70">
+    <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-6 text-center text-xs font-medium text-indigo-300/50">
       {children}
-    </p>
-  );
-}
-
-function RatingSnapshot({
-  label,
-  total,
-  criteria,
-  tone,
-}: {
-  label: string;
-  total: number;
-  criteria: FeedRatingCriterion[];
-  tone: "cyan" | "indigo";
-}) {
-  const toneClasses =
-    tone === "cyan"
-      ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
-      : "border-indigo-500/20 bg-indigo-500/10 text-indigo-300";
-
-  return (
-    <div className="rounded-2xl border border-white/5 bg-black/30 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span
-          className={`rounded-lg border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${toneClasses}`}
-        >
-          {label}
-        </span>
-        <div className="text-right">
-          <p className="text-lg font-black text-white">
-            {formatRatingAverage(criteria)}
-          </p>
-          <p className="text-[8px] font-black uppercase tracking-widest text-indigo-400/60">
-            {total} ratings
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {criteria.length ? (
-          criteria.map((item) => {
-            const pct =
-              item.maxScore > 0
-                ? Math.min(Math.max((item.average / item.maxScore) * 100, 0), 100)
-                : 0;
-
-            return (
-              <div key={`${label}-${item.label}`} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[9px] font-black uppercase tracking-widest text-indigo-200">
-                    {item.label}
-                  </span>
-                  <span className="text-[10px] font-black text-white">
-                    {item.average.toFixed(1)}/{item.maxScore}
-                  </span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-                  <div
-                    className={`h-full rounded-full ${
-                      tone === "cyan" ? "bg-cyan-400" : "bg-indigo-400"
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <p className="text-xs font-semibold text-indigo-300/60">
-            No {label.toLowerCase()} ratings yet.
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -191,9 +117,11 @@ export default function FeedProfileCard({
   isFlipped,
   onToggleFlip,
 }: FeedProfileCardProps) {
+  const [activeRadar, setActiveRadar] = useState<RadarCategory>("social");
   const cv = post.cv ?? {};
-  const image = post.image || FALLBACK_IMAGE;
+  const image = post.image?.trim() || null;
   const username = post.user?.username ?? "anonymous";
+  const email = post.user?.email ?? "No email";
   const experiences = cv.experiences ?? [];
   const educations = cv.educations ?? [];
   const skills = cv.skills ?? [];
@@ -205,30 +133,31 @@ export default function FeedProfileCard({
         <button
           onClick={onToggleFlip}
           type="button"
-          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/90 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-950 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.5)] transition-all hover:-translate-y-0.5 hover:bg-white active:scale-[0.98]"
+          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/95 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-950 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.8)] transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_20px_40px_-15px_rgba(15,23,42,1)] active:scale-[0.98]"
         >
           {isFlipped ? (
             <>
-              <ImageIcon size={14} />
+              <ImageIcon size={14} className="text-indigo-600" />
               <span>View Photo</span>
             </>
           ) : (
             <>
-              <FileUser size={14} />
+              <FileUser size={14} className="text-indigo-600" />
               <span>View CV</span>
             </>
           )}
         </button>
 
         <div
-          className="relative h-full w-full transition-transform duration-700"
+          className="relative h-full w-full transition-transform duration-700 ease-in-out"
           style={{
             transformStyle: "preserve-3d",
             transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
           }}
         >
+          {/* FRONT CARD (Photo & Target Role) */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-[2rem] bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "pointer-events-none opacity-0" : "z-10 opacity-100"
             }`}
             style={{
@@ -236,43 +165,53 @@ export default function FeedProfileCard({
               WebkitBackfaceVisibility: "hidden",
             }}
           >
-            <div className="flex h-full flex-col justify-between rounded-2xl bg-indigo-950 p-4">
-              <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl bg-gray-900">
-                <Image
-                  src={image}
-                  alt={`${post.targetJob} profile`}
-                  fill
-                  sizes="(min-width: 1024px) 58vw, 100vw"
-                  className="object-cover"
-                />
+            <div className="flex h-full flex-col justify-between rounded-2xl bg-indigo-950/50 p-4">
+              <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-indigo-900/50 to-gray-900 shadow-inner">
+                {image ? (
+                  <Image
+                    src={image}
+                    alt={`${post.targetJob} profile`}
+                    fill
+                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    className="object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-indigo-900/40 text-indigo-200">
+                    <FileUser size={48} className="text-indigo-400/50" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300/50">
+                      No Image Provided
+                    </span>
+                  </div>
+                )}
+                
+                {/* Overlay gradient for better text legibility if needed */}
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/80 via-transparent to-transparent opacity-60" />
+
                 {hasProfessionalRating ? (
-                  <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-300 backdrop-blur">
-                    <ShieldCheck size={11} />
+                  <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-500/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-300 shadow-lg backdrop-blur-md">
+                    <ShieldCheck size={12} className="text-amber-400" />
                     Pro Rated
                   </div>
                 ) : null}
               </div>
 
-              <div className="mt-4 text-white">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="mt-5 text-white">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-400">
                     Target Role
                   </span>
-                  <span className="rounded-full border border-white/[0.06] bg-white/[0.03] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-indigo-200">
-                    @{username}
-                  </span>
                 </div>
-                <h1 className="mt-2 font-sans text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+                <h1 className="mt-3 font-sans text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
                   {post.targetJob}
                 </h1>
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-2.5">
                   {post.criteria.map((item) => (
                     <div
                       key={item}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-2"
+                      className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-4 py-2 transition-colors hover:bg-indigo-500/20"
                     >
-                      <Target size={12} className="text-indigo-400 opacity-80" />
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-gray-200">
+                      <Target size={12} className="text-indigo-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-100">
                         {item}
                       </span>
                     </div>
@@ -282,8 +221,9 @@ export default function FeedProfileCard({
             </div>
           </div>
 
+          {/* BACK CARD (CV & Stats) */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-3xl border border-indigo-900/30 bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-[2rem] border border-white/10 bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "z-20 opacity-100" : "pointer-events-none opacity-0"
             }`}
             style={{
@@ -292,38 +232,47 @@ export default function FeedProfileCard({
               transform: "rotateY(180deg)",
             }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.15),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.06),transparent_50%)]" />
+            {/* Ambient Background Glows */}
+            <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(167,139,250,0.1),transparent_50%)]" />
 
-            <div className="relative mt-14 h-[calc(100%-4rem)] overflow-y-auto pr-2 custom-scrollbar">
-              <div className="space-y-5">
-                <div className="relative overflow-hidden rounded-3xl border border-indigo-900/30 bg-linear-to-br from-indigo-900/50 to-indigo-900/70 p-6 shadow-xl">
-                  <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+            <div className="relative mt-14 h-[calc(100%-4rem)] overflow-y-auto pr-3 custom-scrollbar">
+              <div className="space-y-6 pb-6">
+                
+                {/* Header / Radar Section */}
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-900/60 via-indigo-900/40 to-indigo-950/80 p-6 shadow-2xl backdrop-blur-md">
+                  <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl" />
 
                   <div className="relative grid grid-cols-1 gap-6 md:grid-cols-12">
-                    <div className="space-y-4 md:col-span-5">
-                      <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
+                    <div className="space-y-5 md:col-span-7">
+                      <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
                         <div className="relative h-20 w-20 shrink-0">
-                          <Image
-                            src={image}
-                            alt={`${username} avatar`}
-                            fill
-                            sizes="80px"
-                            className="rounded-2xl border border-white/10 object-cover"
-                          />
+                          {image ? (
+                            <Image
+                              src={image}
+                              alt={`${username} avatar`}
+                              fill
+                              sizes="80px"
+                              className="rounded-2xl border-2 border-white/10 object-cover shadow-lg"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center rounded-2xl border-2 border-white/10 bg-gradient-to-br from-indigo-800 to-indigo-900 text-2xl font-black text-indigo-200 shadow-lg">
+                              {userInitial(username)}
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="bg-linear-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-2xl font-black tracking-tight text-white">
+                          <h2 className="bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-2xl font-black tracking-tight text-transparent">
                             @{username}
                           </h2>
-                          <p className="mt-1 text-xs font-bold tracking-wide text-indigo-400">
+                          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-indigo-400">
                             {post.targetJob}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3">
                         {[
-                          { label: "Post ID", value: `#${post.id}` },
+                          { label: "Email", value: email },
                           {
                             label: "AI Score",
                             value:
@@ -338,12 +287,12 @@ export default function FeedProfileCard({
                         ].map((item) => (
                           <div
                             key={item.label}
-                            className="flex items-center justify-between rounded-xl border border-white/5 bg-black/30 px-3.5 py-2.5"
+                            className="group flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-3 transition-colors hover:bg-black/30"
                           >
-                            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-indigo-400">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400/80">
                               {item.label}
                             </span>
-                            <span className="max-w-[70%] truncate text-right text-xs font-medium text-indigo-200">
+                            <span className="max-w-[65%] truncate text-right text-xs font-semibold text-indigo-100 group-hover:text-white">
                               {item.value}
                             </span>
                           </div>
@@ -351,18 +300,11 @@ export default function FeedProfileCard({
                       </div>
                     </div>
 
-                    <div className="grid gap-4 md:col-span-7">
-                      <RatingSnapshot
-                        label="Social"
-                        total={post.ratings.social.totalRatings}
-                        criteria={post.ratings.social.criteria}
-                        tone="cyan"
-                      />
-                      <RatingSnapshot
-                        label="Professional"
-                        total={post.ratings.professional.totalRatings}
-                        criteria={post.ratings.professional.criteria}
-                        tone="indigo"
+                    <div className="md:col-span-5 flex items-center justify-center">
+                      <PerformanceRadar
+                        post={post}
+                        activeRadar={activeRadar}
+                        onActiveRadarChange={setActiveRadar}
                       />
                     </div>
                   </div>
@@ -373,11 +315,12 @@ export default function FeedProfileCard({
                   subtitle="Server Analysis"
                   icon={FileText}
                   iconColorClass="text-indigo-300"
-                  borderColorClass="border-indigo-500/20"
-                  bgColorClass="bg-indigo-500/10"
+                  subtitleColorClass="text-indigo-400/70"
+                  borderColorClass="border-indigo-500/30"
+                  bgColorClass="bg-indigo-500/20"
                 >
                   {post.aiInsight ? (
-                    <p className="text-xs font-medium leading-6 text-indigo-200/95 sm:text-sm sm:leading-7">
+                    <p className="text-sm font-medium leading-relaxed text-indigo-100/90">
                       {post.aiInsight}
                     </p>
                   ) : (
@@ -390,10 +333,11 @@ export default function FeedProfileCard({
                   subtitle="Career Journey"
                   icon={BriefcaseBusiness}
                   iconColorClass="text-violet-300"
-                  borderColorClass="border-violet-500/20"
-                  bgColorClass="bg-violet-500/10"
+                  subtitleColorClass="text-violet-400/70"
+                  borderColorClass="border-violet-500/30"
+                  bgColorClass="bg-violet-500/20"
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {experiences.length ? (
                       experiences.map((item, index) => {
                         const title = itemField(
@@ -420,27 +364,27 @@ export default function FeedProfileCard({
                         return (
                           <div
                             key={`${title}-${index}`}
-                            className="rounded-2xl border border-white/5 bg-gradient-to-r from-black/40 to-black/10 p-5 transition duration-300 hover:border-violet-500/20"
+                            className="group rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition-all duration-300 hover:border-violet-500/30 hover:bg-violet-500/5 hover:shadow-lg hover:shadow-violet-900/20"
                           >
-                            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
+                            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                               <div>
-                                <h4 className="text-base font-bold text-white">
+                                <h4 className="text-base font-bold text-white group-hover:text-violet-100 transition-colors">
                                   {title}
                                 </h4>
                                 {company ? (
-                                  <p className="mt-1 text-xs font-medium text-indigo-300">
+                                  <p className="mt-1 text-xs font-semibold text-violet-300/80">
                                     {company}
                                   </p>
                                 ) : null}
                               </div>
                               {meta ? (
-                                <span className="self-start whitespace-nowrap rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-violet-300 sm:self-auto">
+                                <span className="self-start whitespace-nowrap rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-violet-300 sm:self-auto">
                                   {meta}
                                 </span>
                               ) : null}
                             </div>
                             {description ? (
-                              <p className="mt-3 text-xs font-medium leading-5 text-indigo-300">
+                              <p className="mt-4 text-xs font-medium leading-relaxed text-indigo-200/80">
                                 {description}
                               </p>
                             ) : null}
@@ -448,21 +392,22 @@ export default function FeedProfileCard({
                         );
                       })
                     ) : (
-                      <EmptyState>No work experience in this CV.</EmptyState>
+                      <EmptyState>No work experience listed in this CV.</EmptyState>
                     )}
                   </div>
                 </CollapsibleSection>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <CollapsibleSection
                     title="Education"
                     subtitle="Academic"
                     icon={GraduationCap}
                     iconColorClass="text-cyan-300"
-                    borderColorClass="border-cyan-500/20"
-                    bgColorClass="bg-cyan-500/10"
+                    subtitleColorClass="text-cyan-400/70"
+                    borderColorClass="border-cyan-500/30"
+                    bgColorClass="bg-cyan-500/20"
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {educations.length ? (
                         educations.map((item, index) => {
                           const title = itemField(
@@ -484,18 +429,18 @@ export default function FeedProfileCard({
                           return (
                             <div
                               key={`${title}-${index}`}
-                              className="rounded-xl border border-white/5 bg-black/30 p-4"
+                              className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/5"
                             >
-                              <h5 className="text-xs font-bold text-white">
+                              <h5 className="text-sm font-bold text-white">
                                 {title}
                               </h5>
                               {school ? (
-                                <p className="mt-1 text-[11px] font-medium text-indigo-300">
+                                <p className="mt-1 text-xs font-medium text-cyan-300/80">
                                   {school}
                                 </p>
                               ) : null}
                               {meta ? (
-                                <span className="mt-2 inline-block rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black text-emerald-400">
+                                <span className="mt-3 inline-block rounded-md border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-400">
                                   {meta}
                                 </span>
                               ) : null}
@@ -503,7 +448,7 @@ export default function FeedProfileCard({
                           );
                         })
                       ) : (
-                        <EmptyState>No education data in this CV.</EmptyState>
+                        <EmptyState>No education data found.</EmptyState>
                       )}
                     </div>
                   </CollapsibleSection>
@@ -513,15 +458,16 @@ export default function FeedProfileCard({
                     subtitle="CV Keywords"
                     icon={Target}
                     iconColorClass="text-emerald-300"
-                    borderColorClass="border-emerald-500/20"
-                    bgColorClass="bg-emerald-500/10"
+                    subtitleColorClass="text-emerald-400/70"
+                    borderColorClass="border-emerald-500/30"
+                    bgColorClass="bg-emerald-500/20"
                   >
                     {skills.length ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-2">
                         {skills.map((item) => (
                           <span
                             key={item}
-                            className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300"
+                            className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-emerald-300 transition-colors hover:bg-emerald-500/20"
                           >
                             {item}
                           </span>

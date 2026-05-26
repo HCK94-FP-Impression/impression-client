@@ -45,6 +45,7 @@ export type FeedPost = {
   user: {
     id: number;
     username: string;
+    email?: string;
   };
   cv: FeedCv | null;
   ratings: FeedRatings;
@@ -64,4 +65,12 @@ export type SubmitRatingPayload = {
 
 export type SubmitRatingResponse = {
   message: string;
+};
+
+export type CurrentUser = {
+  id: number;
+  username: string;
+  email: string;
+  quota: number;
+  role: "job_seeker" | "recruiter";
 };

@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import {
-  COMMUNITIES,
-  INITIAL_MEMBERSHIPS,
-  COMMUNITY_DETAILS,
-  CURRENT_USER,
-  type MembershipStatus,
-  type CommunityDetailData,
-  type CommunityMember,
-} from "../data";
+  getCommunityById,
+  getCommunityDashboard,
+  joinCommunity,
+  approveMember,
+  rejectMember,
+} from "../api";
+import { getApiErrorMessage } from "@/constants/constants";
+import { requireClientAuth, isUnauthorizedError, redirectToLogin } from "@/constants/authProxy";
+import type { CommunityItem, MembershipStatus, CommunityDashboard } from "../types";
 import CommunityDetail from "../components/detail";
 
 export default function CommunityDetailPage() {
@@ -18,120 +20,134 @@ export default function CommunityDetailPage() {
   const params = useParams<{ id?: string | string[] }>();
   const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
   const communityId = rawId ? Number(rawId) : NaN;
-  const community = Number.isFinite(communityId)
-    ? (COMMUNITIES.find((item) => item.id === communityId) ?? null)
-    : null;
 
-  const [memberships, setMemberships] =
-    useState<Record<number, MembershipStatus>>(INITIAL_MEMBERSHIPS);
-  const [communityDetails, setCommunityDetails] =
-    useState<Record<number, CommunityDetailData>>(COMMUNITY_DETAILS);
+  const [community, setCommunity] = useState<CommunityItem | null>(null);
+  const [membershipStatus, setMembershipStatus] = useState<MembershipStatus>(null);
+  const [dashboard, setDashboard] = useState<CommunityDashboard | null>(null);
+  const [isLeader, setIsLeader] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleJoin(id: number) {
-    setMemberships((prev) => ({ ...prev, [id]: "pending" }));
-    setCommunityDetails((prev) => {
-      const detail = prev[id];
-      if (!detail) return prev;
-      const alreadyMember = detail.members.some(
-        (m) => m.userId === CURRENT_USER.id,
-      );
-      if (alreadyMember) return prev;
-      const newMember: CommunityMember = {
-        id: Date.now(),
-        userId: CURRENT_USER.id,
-        status: "pending",
-        user: { id: CURRENT_USER.id, username: CURRENT_USER.username },
-      };
-      return {
-        ...prev,
-        [id]: { ...detail, members: [...detail.members, newMember] },
-      };
-    });
-  }
+  const loadData = useCallback(async () => {
+    if (!Number.isFinite(communityId)) { setIsLoading(false); return; }
+    if (!requireClientAuth(router)) return;
 
-  function handleApproveMember(communityIdValue: number, userId: number) {
-    setCommunityDetails((prev) => {
-      const detail = prev[communityIdValue];
-      if (!detail) return prev;
-      return {
-        ...prev,
-        [communityIdValue]: {
-          ...detail,
-          members: detail.members.map((m) =>
-            m.userId === userId ? { ...m, status: "approved" as const } : m,
-          ),
-          statistics: {
-            ...detail.statistics,
-            totalMembers: detail.statistics.totalMembers + 1,
-          },
-        },
-      };
-    });
-    if (userId === CURRENT_USER.id) {
-      setMemberships((prev) => ({ ...prev, [communityIdValue]: "approved" }));
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Fetch basic community info + membership status
+      const { community: c, membershipStatus: status } = await getCommunityById(communityId);
+      setCommunity(c);
+      setMembershipStatus(status);
+
+      // Fetch dashboard only for approved members
+      if (status === "approved") {
+        try {
+          const dash = await getCommunityDashboard(communityId);
+          setDashboard(dash);
+          setIsLeader(dash.isLeader);
+        } catch {
+          // Dashboard access denied (shouldn't happen since status=approved)
+        }
+      }
+    } catch (err) {
+      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      setError(getApiErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [communityId, router]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  async function handleJoin(id: number) {
+    if (isJoining) return;
+    setIsJoining(true);
+    setError(null);
+    try {
+      await joinCommunity(id);
+      setMembershipStatus("pending");
+    } catch (err) {
+      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      setError(getApiErrorMessage(err));
+    } finally {
+      setIsJoining(false);
     }
   }
 
-  function handleRejectMember(communityIdValue: number, userId: number) {
-    setCommunityDetails((prev) => {
-      const detail = prev[communityIdValue];
-      if (!detail) return prev;
-      return {
-        ...prev,
-        [communityIdValue]: {
-          ...detail,
-          members: detail.members.filter((m) => m.userId !== userId),
-        },
-      };
-    });
-    if (userId === CURRENT_USER.id) {
-      setMemberships((prev) => ({ ...prev, [communityIdValue]: "none" }));
+  async function handleApproveMember(cId: number, userId: number) {
+    try {
+      await approveMember(cId, userId);
+      // Refresh dashboard to get updated members/pending list
+      const dash = await getCommunityDashboard(cId);
+      setDashboard(dash);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
     }
   }
 
-  if (!community) {
+  async function handleRejectMember(cId: number, userId: number) {
+    try {
+      await rejectMember(cId, userId);
+      const dash = await getCommunityDashboard(cId);
+      setDashboard(dash);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    }
+  }
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-100 via-indigo-50/60 to-slate-100 px-4 py-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-4xl border border-white/60 bg-white/70 p-8 text-center shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
-            <p className="text-lg font-black text-indigo-950">
-              Community not found
-            </p>
-            <p className="mt-2 text-sm font-medium text-slate-500">
-              The community you are looking for does not exist.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push("/comunity")}
-              className="mt-6 rounded-2xl bg-indigo-950 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800"
-            >
-              Back to Communities
-            </button>
-          </div>
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex items-center gap-3 text-indigo-400">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm font-black uppercase tracking-widest">Loading…</span>
         </div>
       </div>
     );
   }
 
-  const status = memberships[community.id] ?? "none";
-  const isLeader = community.leaderId === CURRENT_USER.id;
-  const canViewDetails = status === "approved" || isLeader;
-  const detail = canViewDetails
-    ? (communityDetails[community.id] ?? null)
-    : null;
+  if (!Number.isFinite(communityId) || (!community && !isLoading)) {
+    return (
+      <div className="mx-auto max-w-6xl py-10 px-4">
+        <div className="rounded-4xl border border-white/60 bg-white/70 p-8 text-center shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
+          <p className="text-lg font-black text-indigo-950">
+            {error ?? "Community not found"}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/comunity")}
+            className="mt-6 rounded-2xl bg-indigo-950 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800"
+          >
+            Back to Communities
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mx-auto max-w-6xl">
-        <CommunityDetail
-          community={community}
-          status={status}
-          detail={detail}
-          onBack={() => router.push("/comunity")}
-          onJoin={handleJoin}
-          onApproveMember={handleApproveMember}
-          onRejectMember={handleRejectMember}
-        />
+        {error && (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-rose-600">
+            {error}
+          </div>
+        )}
+        {community && (
+          <CommunityDetail
+            community={community}
+            membershipStatus={membershipStatus}
+            dashboard={dashboard}
+            isLeader={isLeader}
+            isJoining={isJoining}
+            onBack={() => router.push("/comunity")}
+            onJoin={handleJoin}
+            onApproveMember={handleApproveMember}
+            onRejectMember={handleRejectMember}
+          />
+        )}
       </div>
     </div>
   );

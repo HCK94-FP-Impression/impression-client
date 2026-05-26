@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
-  CheckCircle2,
   LoaderCircle,
   RefreshCw,
 } from "lucide-react";
@@ -11,34 +10,25 @@ import { useRouter } from "next/navigation";
 import FeedProfileCard from "./components/cardProfile";
 import FeedRatingPanel from "./components/rating";
 import FeedInsightPanel from "./components/insight";
+import { getFeedPost, submitRating, getCurrentUser, getMyTargetJob } from "./api";
+import { getApiErrorMessage } from "@/constants/constants";
 import {
-  getApiErrorMessage,
-  getFeedPost,
-  hasStoredSession,
   isUnauthorizedError,
-  submitRating,
-} from "./api";
+  redirectToLogin,
+  requireClientAuth,
+} from "@/constants/authProxy";
 import type { FeedResponse } from "./types";
 
 type FeedbackState = {
-  tone: "error" | "success";
   message: string;
 } | null;
 
 function FeedbackNotice({ feedback }: { feedback: FeedbackState }) {
   if (!feedback) return null;
 
-  const isSuccess = feedback.tone === "success";
-
   return (
-    <div
-      className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${
-        isSuccess
-          ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-          : "border-rose-100 bg-rose-50 text-rose-600"
-      }`}
-    >
-      {isSuccess ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-rose-600">
+      <AlertCircle size={14} />
       <span>{feedback.message}</span>
     </div>
   );
@@ -71,18 +61,33 @@ export default function FeedPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [userRole, setUserRole] = useState<"job_seeker" | "recruiter" | null>(null);
+  const [myTargetJob, setMyTargetJob] = useState<string | null>(null);
 
   const post = feed?.post ?? null;
 
+  const isProfessional =
+    userRole === "recruiter" ||
+    (myTargetJob !== null && post !== null && myTargetJob === post.targetJob);
+
+  useEffect(() => {
+    async function loadUserContext() {
+      try {
+        const user = await getCurrentUser();
+        setUserRole(user.role);
+      } catch {}
+      const job = await getMyTargetJob();
+      setMyTargetJob(job);
+    }
+    void loadUserContext();
+  }, []);
+
   const loadFeed = useCallback(
-    async (skipPostId?: number, nextFeedback?: FeedbackState) => {
-      if (!hasStoredSession()) {
-        router.replace("/login");
-        return;
-      }
+    async (skipPostId?: number) => {
+      if (!requireClientAuth(router)) return;
 
       setIsLoading(true);
-      if (!nextFeedback) setFeedback(null);
+      setFeedback(null);
 
       try {
         const data = await getFeedPost(skipPostId);
@@ -90,15 +95,13 @@ export default function FeedPage() {
         setScores(data.post ? Array(data.post.criteria.length).fill(null) : []);
         setInsightDraft("");
         setIsFlipped(false);
-        if (nextFeedback) setFeedback(nextFeedback);
       } catch (error) {
         if (isUnauthorizedError(error)) {
-          router.replace("/login");
+          redirectToLogin(router);
           return;
         }
 
         setFeedback({
-          tone: "error",
           message: getApiErrorMessage(error, "Failed to load feed"),
         });
       } finally {
@@ -124,47 +127,27 @@ export default function FeedPage() {
 
   const handleSubmitRating = async () => {
     if (!post) return;
-
-    if (!hasStoredSession()) {
-      router.replace("/login");
-      return;
-    }
-
-    const normalizedScores = scores.map((score) => score ?? -1);
-    const hasInvalidScore = normalizedScores.some(
-      (score) => !Number.isInteger(score) || score < 0 || score > 3,
-    );
-
-    if (hasInvalidScore || normalizedScores.length !== post.criteria.length) {
-      setFeedback({
-        tone: "error",
-        message: "Scores length must match criteria length",
-      });
-      return;
-    }
+    if (!requireClientAuth(router)) return;
+    if (scores.some((s) => s === null)) return;
 
     setIsSubmitting(true);
     setFeedback(null);
 
     try {
-      const response = await submitRating({
+      await submitRating({
         postId: post.id,
-        scores: normalizedScores,
-        insight: insightDraft,
+        scores: scores as number[],
+        insight: isProfessional ? insightDraft : undefined,
       });
 
-      await loadFeed(post.id, {
-        tone: "success",
-        message: response.message,
-      });
+      await loadFeed(post.id);
     } catch (error) {
       if (isUnauthorizedError(error)) {
-        router.replace("/login");
+        redirectToLogin(router);
         return;
       }
 
       setFeedback({
-        tone: "error",
         message: getApiErrorMessage(error, "Failed to submit rating"),
       });
     } finally {
@@ -251,7 +234,11 @@ export default function FeedPage() {
         post={post}
         insightDraft={insightDraft}
         disabled={isSubmitting || isLoading}
+        allScoresFilled={scores.length > 0 && scores.every((s) => s !== null)}
+        isSubmitting={isSubmitting}
+        isProfessional={isProfessional}
         onInsightChange={setInsightDraft}
+        onSubmit={handleSubmitRating}
       />
     </div>
   );
