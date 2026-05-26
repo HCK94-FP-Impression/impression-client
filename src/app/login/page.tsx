@@ -11,15 +11,15 @@ import {
 } from "lucide-react";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
-import { api, ApiErrorData } from "@/constants/constants";
+import { api, getApiErrorMessage } from "@/constants/constants";
+import { persistAuthSession } from "@/constants/authProxy";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter()
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,13 +32,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/login', form);
-      if (res.status === 200) {
-        router.push('/')
+      const res = await api.post("/auth/login", form);
+      if (res.status >= 200 && res.status < 300) {
+        persistAuthSession(res.data);
+        router.push("/feed");
       }
-    } catch (e) {
-      setError((e as AxiosError<ApiErrorData>).response?.data.message || "An error occured. Please try again.")
-      setLoading(false)
+    } catch (error) {
+      setError(getApiErrorMessage(error, "An error occured. Please try again."));
+    } finally {
+      setLoading(false);
     }
   };
 

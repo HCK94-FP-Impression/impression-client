@@ -1,7 +1,6 @@
 "use client";
 
 import { Info, LoaderCircle, RefreshCw, Send } from "lucide-react";
-import { ratingOptions } from "../data";
 
 type FeedRatingPanelProps = {
   criteria: string[];
@@ -12,6 +11,13 @@ type FeedRatingPanelProps = {
   onSubmit: () => void;
   onSkip: () => void;
 };
+
+const RATING_OPTIONS = [
+  { label: "NO", level: 0 },
+  { label: "SOMEWHAT", level: 1 },
+  { label: "YES", level: 2 },
+  { label: "VERY", level: 3 },
+];
 
 export default function FeedRatingPanel({
   criteria,
@@ -65,7 +71,7 @@ export default function FeedRatingPanel({
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-              {ratingOptions.map((option) => {
+              {RATING_OPTIONS.map((option) => {
                 const active = scores[index] === option.level;
 
                 return (

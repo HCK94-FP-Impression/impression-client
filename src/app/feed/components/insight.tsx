@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   ArrowDownUp,
+  LoaderCircle,
   MessageSquareText,
+  SendHorizonal,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -19,7 +21,11 @@ type FeedInsightPanelProps = {
   post: FeedPost;
   insightDraft: string;
   disabled: boolean;
+  allScoresFilled: boolean;
+  isSubmitting: boolean;
+  isProfessional: boolean;
   onInsightChange: (value: string) => void;
+  onSubmit: () => void;
 };
 
 const AVATAR_COLORS = [
@@ -170,7 +176,11 @@ export default function FeedInsightPanel({
   post,
   insightDraft,
   disabled,
+  allScoresFilled,
+  isSubmitting,
+  isProfessional,
   onInsightChange,
+  onSubmit,
 }: FeedInsightPanelProps) {
   const [sort, setSort] = useState<SortMode>("newest");
   const insights = post.ratings.professional.insights;
@@ -223,24 +233,52 @@ export default function FeedInsightPanel({
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-white/5 bg-indigo-950 shadow-xl">
-          <div className="border-b border-white/5 bg-indigo-900/40 px-6 py-5">
-            <p className="mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">
-              Optional Insight
-            </p>
-            <div className="flex gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-950 text-indigo-300">
-                <Sparkles size={14} />
+          {isProfessional && (
+            <div className="border-b border-white/5 bg-indigo-900/40 px-6 py-5">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">
+                Your Insight
+              </p>
+              <div className="flex gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-950 text-indigo-300">
+                  <Sparkles size={14} />
+                </div>
+                <textarea
+                  value={insightDraft}
+                  onChange={(event) => onInsightChange(event.target.value)}
+                  disabled={disabled}
+                  placeholder="Share a professional note for this profile..."
+                  rows={insightDraft ? 3 : 2}
+                  className="w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-indigo-400/60 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                />
               </div>
-              <textarea
-                value={insightDraft}
-                onChange={(event) => onInsightChange(event.target.value)}
-                disabled={disabled}
-                placeholder="Share a professional note for this profile..."
-                rows={insightDraft ? 3 : 2}
-                className="w-full resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-indigo-400/60 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-              />
+
+              {insightDraft.trim() ? (
+                allScoresFilled ? (
+                  <button
+                    type="button"
+                    onClick={onSubmit}
+                    disabled={isSubmitting}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmitting ? (
+                      <LoaderCircle size={11} className="animate-spin" />
+                    ) : (
+                      <SendHorizonal size={11} />
+                    )}
+                    Submit Rating + Insight
+                  </button>
+                ) : (
+                  <p className="mt-3 text-center text-[9px] font-black uppercase tracking-widest text-amber-400/70">
+                    Complete your rating above to submit this insight
+                  </p>
+                )
+              ) : (
+                <p className="mt-3 text-center text-[9px] font-black uppercase tracking-widest text-indigo-400/40">
+                  Insight is submitted together with your rating
+                </p>
+              )}
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-between border-b border-white/5 px-6 py-3">
             <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-400">
@@ -265,7 +303,7 @@ export default function FeedInsightPanel({
             </div>
           </div>
 
-          <div className="max-h-[520px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10">
+          <div className="max-h-130 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10">
             {sortedInsights.length ? (
               sortedInsights.map((insight, index) => (
                 <InsightItem
