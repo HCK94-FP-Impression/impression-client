@@ -13,7 +13,7 @@ import type {
   FeedPost,
   FeedProfessionalInsight,
   FeedRatingCriterion,
-} from "../types";
+} from "../../../types";
 
 type SortMode = "newest" | "highest";
 
@@ -75,7 +75,9 @@ function RatingAggregate({
     <div className="rounded-2xl border border-gray-100 bg-gray-50/80 p-5 shadow">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <p className={`text-[9px] font-black uppercase tracking-[0.3em] ${labelClass}`}>
+          <p
+            className={`text-[9px] font-black uppercase tracking-[0.3em] ${labelClass}`}
+          >
             {title}
           </p>
           <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-400">
@@ -97,11 +99,17 @@ function RatingAggregate({
           criteria.map((item) => {
             const pct =
               item.maxScore > 0
-                ? Math.min(Math.max((item.average / item.maxScore) * 100, 0), 100)
+                ? Math.min(
+                    Math.max((item.average / item.maxScore) * 100, 0),
+                    100,
+                  )
                 : 0;
 
             return (
-              <div key={`${title}-${item.label}`} className="flex items-center gap-3">
+              <div
+                key={`${title}-${item.label}`}
+                className="flex items-center gap-3"
+              >
                 <span className="w-28 shrink-0 truncate text-[9px] font-black uppercase tracking-widest text-gray-600">
                   {item.label}
                 </span>
