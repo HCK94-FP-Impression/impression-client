@@ -19,6 +19,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ProfileRadar from "./components/radar";
+import JobRecommendations from "./components/JobRecommendations";
 import axios from "axios";
 import { api, getApiErrorMessage } from "@/constants/constants";
 import { isUnauthorizedError, redirectToLogin } from "@/constants/authProxy";
@@ -197,7 +198,8 @@ export default function ProfilePage() {
                 Build your profile in Studio
               </h2>
               <p className="mx-auto mt-3 max-w-sm text-sm font-medium leading-relaxed text-indigo-300/70">
-                Upload a photo, fill in your CV, and set your target job so the community can rate your profile.
+                Upload a photo, fill in your CV, and set your target job so the
+                community can rate your profile.
               </p>
             </div>
 
@@ -213,9 +215,21 @@ export default function ProfilePage() {
 
             <div className="mt-2 grid grid-cols-3 gap-4 border-t border-indigo-900/40 pt-6 text-center">
               {[
-                { icon: Star, label: "Rating", desc: "Get scored by the community" },
-                { icon: Zap, label: "Quota", desc: "Earn points by rating others" },
-                { icon: Target, label: "Feedback", desc: "Professional insights from peers" },
+                {
+                  icon: Star,
+                  label: "Rating",
+                  desc: "Get scored by the community",
+                },
+                {
+                  icon: Zap,
+                  label: "Quota",
+                  desc: "Earn points by rating others",
+                },
+                {
+                  icon: Target,
+                  label: "Feedback",
+                  desc: "Professional insights from peers",
+                },
               ].map(({ icon: Icon, label, desc }) => (
                 <div key={label} className="flex flex-col items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
@@ -611,6 +625,9 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* 10. JOB RECOMMENDATIONS */}
+        {post && <JobRecommendations />}
       </div>
     </div>
   );
