@@ -4,6 +4,7 @@ import type {
   CommunityByIdResponse,
   CommunityDashboardResponse,
   MessageResponse,
+  ForumPost,
 } from "./types";
 
 export async function getCommunities(params?: { search?: string; domain?: string }) {
@@ -42,4 +43,23 @@ export async function rejectMember(communityId: number, userId: number) {
     `/communities/${communityId}/members/${userId}/reject`,
   );
   return response.data;
+}
+
+export async function getCommunityPosts(communityId: number): Promise<ForumPost[]> {
+  const response = await api.get<{ posts: ForumPost[] }>(
+    `/communities/${communityId}/posts`,
+  );
+  return response.data.posts;
+}
+
+export async function createCommunityPost(
+  communityId: number,
+  title: string,
+  content: string,
+): Promise<ForumPost> {
+  const response = await api.post<{ post: ForumPost }>(
+    `/communities/${communityId}/posts`,
+    { title, content },
+  );
+  return response.data.post;
 }

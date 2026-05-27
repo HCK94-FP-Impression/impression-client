@@ -13,6 +13,7 @@ import {
 import type { CommunityItem, MembershipStatus, CommunityDashboard } from "../types";
 import { DOMAIN_META_DARK } from "../data";
 import PendingApprovalQueue from "./PendingApprovalQueue";
+import ForumPanel from "./ForumPanel";
 
 type Props = {
   community: CommunityItem;
@@ -159,13 +160,13 @@ export default function CommunityDetail({
           </div>
 
           {/* Leader: pending approval queue */}
-          {isLeader && (
+          {isLeader && pendingMembers.length > 0 && (
             <PendingApprovalQueue
               title="Pending Requests"
               items={pendingMembers.map((m) => ({
                 id: m.id,
                 userId: m.userId,
-                username: m.User.username,
+                username: m.User?.username ?? "Unknown",
                 communityId: community.id,
               }))}
               tone="amber"
@@ -262,10 +263,10 @@ export default function CommunityDetail({
                   className="flex items-center gap-3 rounded-2xl bg-indigo-900/40 px-4 py-3"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-800 text-[10px] font-black text-indigo-200">
-                    {m.User.username[0].toUpperCase()}
+                    {(m.User?.username ?? "?")[0].toUpperCase()}
                   </div>
                   <span className="truncate text-[11px] font-bold text-indigo-200">
-                    @{m.User.username}
+                    @{m.User?.username ?? "Unknown"}
                   </span>
                   {m.userId === community.leaderId && (
                     <Crown size={9} className="shrink-0 text-amber-400" />
@@ -274,6 +275,9 @@ export default function CommunityDetail({
               ))}
             </div>
           </div>
+
+          {/* Forum */}
+          <ForumPanel communityId={community.id} />
         </div>
       )}
     </div>
