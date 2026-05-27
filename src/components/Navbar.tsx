@@ -29,9 +29,16 @@ export default function Navbar() {
     const authenticated = hasClientAuthSession();
     setIsAuthenticated(authenticated);
     if (!authenticated) return;
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => {});
+    getCurrentUser().then(setUser).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function refreshUser() {
+      if (!hasClientAuthSession()) return;
+      getCurrentUser().then(setUser).catch(() => {});
+    }
+    window.addEventListener("quota-updated", refreshUser);
+    return () => window.removeEventListener("quota-updated", refreshUser);
   }, []);
 
   function handleLogout() {
