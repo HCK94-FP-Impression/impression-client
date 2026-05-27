@@ -11,8 +11,16 @@ import {
   rejectMember,
 } from "../api";
 import { getApiErrorMessage } from "@/constants/constants";
-import { requireClientAuth, isUnauthorizedError, redirectToLogin } from "@/constants/authProxy";
-import type { CommunityItem, MembershipStatus, CommunityDashboard } from "../types";
+import {
+  requireClientAuth,
+  isUnauthorizedError,
+  redirectToLogin,
+} from "@/constants/authProxy";
+import type {
+  CommunityItem,
+  MembershipStatus,
+  CommunityDashboard,
+} from "../types";
 import CommunityDetail from "../components/detail";
 
 export default function CommunityDetailPage() {
@@ -22,7 +30,8 @@ export default function CommunityDetailPage() {
   const communityId = rawId ? Number(rawId) : NaN;
 
   const [community, setCommunity] = useState<CommunityItem | null>(null);
-  const [membershipStatus, setMembershipStatus] = useState<MembershipStatus>(null);
+  const [membershipStatus, setMembershipStatus] =
+    useState<MembershipStatus>(null);
   const [dashboard, setDashboard] = useState<CommunityDashboard | null>(null);
   const [isLeader, setIsLeader] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,14 +39,18 @@ export default function CommunityDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    if (!Number.isFinite(communityId)) { setIsLoading(false); return; }
+    if (!Number.isFinite(communityId)) {
+      setIsLoading(false);
+      return;
+    }
     if (!requireClientAuth(router)) return;
 
     setIsLoading(true);
     setError(null);
     try {
       // Fetch basic community info + membership status
-      const { community: c, membershipStatus: status } = await getCommunityById(communityId);
+      const { community: c, membershipStatus: status } =
+        await getCommunityById(communityId);
       setCommunity(c);
       setMembershipStatus(status);
 
@@ -52,14 +65,19 @@ export default function CommunityDetailPage() {
         }
       }
     } catch (err) {
-      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      if (isUnauthorizedError(err)) {
+        redirectToLogin(router);
+        return;
+      }
       setError(getApiErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   }, [communityId, router]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   async function handleJoin(id: number) {
     if (isJoining) return;
@@ -69,7 +87,10 @@ export default function CommunityDetailPage() {
       await joinCommunity(id);
       setMembershipStatus("pending");
     } catch (err) {
-      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      if (isUnauthorizedError(err)) {
+        redirectToLogin(router);
+        return;
+      }
       setError(getApiErrorMessage(err));
     } finally {
       setIsJoining(false);
@@ -102,7 +123,9 @@ export default function CommunityDetailPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex items-center gap-3 text-indigo-400">
           <Loader2 size={20} className="animate-spin" />
-          <span className="text-sm font-black uppercase tracking-widest">Loading…</span>
+          <span className="text-sm font-black uppercase tracking-widest">
+            Loading…
+          </span>
         </div>
       </div>
     );
@@ -118,7 +141,7 @@ export default function CommunityDetailPage() {
           <button
             type="button"
             onClick={() => router.push("/comunity")}
-            className="mt-6 rounded-2xl bg-indigo-950 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800"
+            className="mt-6 cursor-pointer rounded-2xl bg-indigo-950 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800"
           >
             Back to Communities
           </button>

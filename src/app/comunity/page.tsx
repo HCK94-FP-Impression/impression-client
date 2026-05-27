@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { Compass, BookMarked, Loader2, RefreshCw } from "lucide-react";
 import { getCommunities, getCommunityById, joinCommunity } from "./api";
 import { getApiErrorMessage } from "@/constants/constants";
-import { requireClientAuth, isUnauthorizedError, redirectToLogin } from "@/constants/authProxy";
+import {
+  requireClientAuth,
+  isUnauthorizedError,
+  redirectToLogin,
+} from "@/constants/authProxy";
 import type { CommunityItem, MembershipStatus } from "./types";
 import CommunityExplore from "./components/list";
 import MyCommunity from "./components/MyCommunity";
@@ -16,7 +20,9 @@ export default function CommunityPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("explore");
   const [communities, setCommunities] = useState<CommunityItem[]>([]);
-  const [memberships, setMemberships] = useState<Record<number, MembershipStatus>>({});
+  const [memberships, setMemberships] = useState<
+    Record<number, MembershipStatus>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,14 +47,19 @@ export default function CommunityPage() {
       for (const { id, status } of statuses) statusMap[id] = status;
       setMemberships(statusMap);
     } catch (err) {
-      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      if (isUnauthorizedError(err)) {
+        redirectToLogin(router);
+        return;
+      }
       setError(getApiErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   }, [router]);
 
-  useEffect(() => { loadCommunities(); }, [loadCommunities]);
+  useEffect(() => {
+    loadCommunities();
+  }, [loadCommunities]);
 
   async function handleJoin(id: number) {
     if (joiningId) return;
@@ -58,7 +69,10 @@ export default function CommunityPage() {
       await joinCommunity(id);
       setMemberships((prev) => ({ ...prev, [id]: "pending" }));
     } catch (err) {
-      if (isUnauthorizedError(err)) { redirectToLogin(router); return; }
+      if (isUnauthorizedError(err)) {
+        redirectToLogin(router);
+        return;
+      }
       setError(getApiErrorMessage(err));
     } finally {
       setJoiningId(null);
@@ -74,7 +88,9 @@ export default function CommunityPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex items-center gap-3 text-indigo-400">
           <Loader2 size={20} className="animate-spin" />
-          <span className="text-sm font-black uppercase tracking-widest">Loading communities…</span>
+          <span className="text-sm font-black uppercase tracking-widest">
+            Loading communities…
+          </span>
         </div>
       </div>
     );
@@ -83,11 +99,13 @@ export default function CommunityPage() {
   if (error && communities.length === 0) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-sm font-black uppercase tracking-widest text-rose-500">{error}</p>
+        <p className="text-sm font-black uppercase tracking-widest text-rose-500">
+          {error}
+        </p>
         <button
           type="button"
           onClick={loadCommunities}
-          className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-gray-600 hover:border-indigo-200 hover:text-indigo-600"
+          className="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-gray-600 hover:border-indigo-200 hover:text-indigo-600"
         >
           <RefreshCw size={13} /> Try Again
         </button>
@@ -99,7 +117,9 @@ export default function CommunityPage() {
     <div>
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-indigo-950">Communities</h1>
+          <h1 className="text-3xl font-black tracking-tight text-indigo-950">
+            Communities
+          </h1>
           <p className="mt-1 text-sm font-medium text-indigo-400">
             Join communities, connect with peers, and grow together.
           </p>
@@ -123,7 +143,7 @@ export default function CommunityPage() {
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
+              className={`flex cursor-pointer items-center gap-2 rounded-xl px-5 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${
                 tab === key
                   ? "bg-indigo-950 text-white shadow-sm"
                   : "text-gray-500 hover:text-indigo-700"

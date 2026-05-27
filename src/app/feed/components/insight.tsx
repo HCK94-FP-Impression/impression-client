@@ -262,7 +262,7 @@ export default function FeedInsightPanel({
                     type="button"
                     onClick={onSubmit}
                     disabled={isSubmitting}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-3 flex cursor-pointer w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSubmitting ? (
                       <LoaderCircle size={11} className="animate-spin" />
@@ -294,7 +294,7 @@ export default function FeedInsightPanel({
                     key={mode}
                     type="button"
                     onClick={() => setSort(mode)}
-                    className={`rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                    className={`rounded-lg cursor-pointer px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
                       sort === mode
                         ? "bg-indigo-950 text-indigo-300 shadow-sm"
                         : "text-indigo-400 hover:text-indigo-200"
@@ -321,8 +321,8 @@ export default function FeedInsightPanel({
                     No professional insights yet
                   </p>
                   <p className="mx-auto mt-2 max-w-md text-xs font-medium leading-5 text-indigo-400">
-                    Professional comments will appear here when the server returns
-                    them for this post.
+                    Professional comments will appear here when the server
+                    returns them for this post.
                   </p>
                 </div>
               )}
@@ -344,7 +344,8 @@ export default function FeedInsightPanel({
                 Social Mode
               </p>
               <p className="mt-0.5 text-[10px] font-medium text-cyan-600/70">
-                Professional insights are only visible to recruiters and peers in the same field.
+                Professional insights are only visible to recruiters and peers
+                in the same field.
               </p>
             </div>
           </div>

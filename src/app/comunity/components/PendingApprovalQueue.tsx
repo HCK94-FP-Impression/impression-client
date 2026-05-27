@@ -101,14 +101,14 @@ export default function PendingApprovalQueue({
               <button
                 type="button"
                 onClick={() => onApprove(item.communityId, item.userId)}
-                className="flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/20"
+                className="flex cursor-pointer items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/20"
               >
                 <CheckCircle2 size={10} /> Approve
               </button>
               <button
                 type="button"
                 onClick={() => onReject(item.communityId, item.userId)}
-                className="flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/20"
+                className="flex cursor-pointer items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/20"
               >
                 <XCircle size={10} /> Reject
               </button>

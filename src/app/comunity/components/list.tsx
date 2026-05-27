@@ -23,7 +23,9 @@ export default function CommunityExplore({
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
         <Users size={40} className="text-indigo-400/30" />
-        <p className="text-base font-black text-indigo-400/50">No communities found</p>
+        <p className="text-base font-black text-indigo-400/50">
+          No communities found
+        </p>
       </div>
     );
   }
@@ -84,9 +86,11 @@ export default function CommunityExplore({
                   type="button"
                   onClick={() => onJoin(c.id)}
                   disabled={joiningId === c.id}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-indigo-950 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex cursor-pointer flex-1 items-center justify-center gap-1.5 rounded-2xl bg-indigo-950 py-2.5 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {joiningId === c.id && <Loader2 size={11} className="animate-spin" />}
+                  {joiningId === c.id && (
+                    <Loader2 size={11} className="animate-spin" />
+                  )}
                   Join Community
                 </button>
               )}
@@ -104,7 +108,7 @@ export default function CommunityExplore({
               <button
                 type="button"
                 onClick={() => onViewDetail(c.id)}
-                className="flex items-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-indigo-200 hover:text-indigo-600"
+                className="flex cursor-pointer items-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-600 transition-all hover:border-indigo-200 hover:text-indigo-600"
               >
                 View <ArrowRight size={11} />
               </button>

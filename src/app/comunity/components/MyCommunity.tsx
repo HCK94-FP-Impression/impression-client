@@ -10,7 +10,11 @@ type Props = {
   onViewDetail: (id: number) => void;
 };
 
-export default function MyCommunity({ communities, memberships, onViewDetail }: Props) {
+export default function MyCommunity({
+  communities,
+  memberships,
+  onViewDetail,
+}: Props) {
   const myCommunities = communities.filter(
     (c) => memberships[c.id] === "approved" || memberships[c.id] === "pending",
   );
@@ -19,7 +23,9 @@ export default function MyCommunity({ communities, memberships, onViewDetail }: 
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
         <Users size={40} className="text-indigo-400/30" />
-        <p className="text-base font-black text-indigo-400/50">No communities yet</p>
+        <p className="text-base font-black text-indigo-400/50">
+          No communities yet
+        </p>
         <p className="text-xs font-medium text-indigo-400/30">
           Explore and join communities to see them here.
         </p>
@@ -33,8 +39,14 @@ export default function MyCommunity({ communities, memberships, onViewDetail }: 
         const status = memberships[c.id];
         const isLeader = false; // determined per-community only on detail page
         const domain = isLeader
-          ? (DOMAIN_META_DARK[c.domain] ?? { label: c.domain, pill: "border-gray-500/30 bg-gray-500/10 text-gray-400" })
-          : (DOMAIN_META[c.domain] ?? { label: c.domain, pill: "border-gray-200 bg-gray-100 text-gray-500" });
+          ? (DOMAIN_META_DARK[c.domain] ?? {
+              label: c.domain,
+              pill: "border-gray-500/30 bg-gray-500/10 text-gray-400",
+            })
+          : (DOMAIN_META[c.domain] ?? {
+              label: c.domain,
+              pill: "border-gray-200 bg-gray-100 text-gray-500",
+            });
 
         return (
           <div
@@ -77,7 +89,9 @@ export default function MyCommunity({ communities, memberships, onViewDetail }: 
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">by</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                  by
+                </span>
                 <span className="text-[11px] font-black text-indigo-600">
                   @{c.leader.username}
                 </span>
@@ -87,7 +101,7 @@ export default function MyCommunity({ communities, memberships, onViewDetail }: 
             <button
               type="button"
               onClick={() => onViewDetail(c.id)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-white py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-600 transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
+              className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-white py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-600 transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
             >
               View Detail <ArrowRight size={11} />
             </button>
