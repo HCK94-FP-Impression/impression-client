@@ -13,8 +13,7 @@ import { hasClientAuthSession } from "@/constants/authProxy";
 import { getCurrentUser } from "@/api/user";
 import type { CurrentUser } from "@/api/user";
 
-const appName = "Impression";
-const uploadQuotaRequirement = 50;
+const uploadQuotaRequirement = 5;
 
 const landingSteps = [
   "Rate other professional profiles anonymously.",
@@ -58,7 +57,7 @@ export default function Home() {
               </h1>
 
               <p className="mt-6 max-w-lg text-base font-medium leading-relaxed text-gray-500">
-                {appName} helps you improve your professional profile through
+                Impression helps you improve your professional profile through
                 anonymous community feedback before your first interview.
               </p>
             </header>
