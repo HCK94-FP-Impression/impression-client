@@ -27,13 +27,6 @@ export type LoadingState = { generate: boolean; submit: boolean; parse: boolean 
 /* const PUBLISH_COST = 5;   // rating points needed to republish
 const CV_TOKEN_COST = 3;  // CV tokens needed per parse (separate pool) */
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
-  if (error instanceof Error) return error.message || fallback;
-  return fallback;
-};
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 /* const GlassCard = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
@@ -78,6 +71,8 @@ export default function EditProfilePage() {
     criteria: ["", "", ""]
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [hasPost, setHasPost] = useState<boolean | null>(null);
+  const [hasCv, setHasCv] = useState<boolean | null>(null);
 
   // Token pools
   // const [ratingPoints, setRatingPoints] = useState(0);
@@ -119,20 +114,104 @@ export default function EditProfilePage() {
       if (!c.company) return false;
       if (!c.startDate) return false;
       if (!c.endDate) return false;
-      if (!c.description) {
-        return false
-      } else {
-        return true
-      }
+      if (!c.description?.trim()) return false;
+      return true;
     }) && cv.educations.every((c) => {
       if (!c.degree) return false;
       if (!c.institution) return false;
       if (!c.startDate) return false;
       if (!c.endDate) return false;
-      if (!c.gpa) return false;
+      if (c.gpa === null || Number.isNaN(c.gpa)) return false;
+      return true;
     }) && cv.skills.every((c) => c.trim().length > 0),
     [cv.experiences, cv.educations, cv.skills],
   );
+
+  const isFirstTime = hasPost === false && hasCv === false;
+  const pageTitle = hasPost === null || hasCv === null
+    ? "Profile"
+    : isFirstTime
+      ? "Add Profile"
+      : "Edit Profile";
+
+  const normalizeDate = (value?: string | Date | null) => {
+    if (!value) return null;
+    const parsed = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().slice(0, 10);
+  };
+
+  const normalizeCriteria = (criteria?: string[]) => {
+    const base = criteria ? [...criteria] : [];
+    while (base.length < 3) base.push("");
+    return base.slice(0, 3) as [string, string, string];
+  };
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadProfile = async () => {
+      const [postResult, cvResult] = await Promise.allSettled([
+        api.get<{ post?: { image?: string; targetJob?: string; criteria?: string[] } }>("/posts/my-post"),
+        api.get<{
+          experiences?: Array<{ title: string; company: string; startDate: string | null; endDate: string | null; description: string | null }>;
+          educations?: Array<{ degree: string; institution: string; startDate: string | null; endDate: string | null; gpa: number | null }>;
+          skills?: string[];
+        }>("/cvs"),
+      ]);
+
+      if (!isActive) return;
+
+      if (postResult.status === "fulfilled" && postResult.value.data?.post) {
+        const postData = postResult.value.data.post;
+        setPost({
+          image: postData.image ?? "",
+          targetJob: postData.targetJob ?? "",
+          criteria: normalizeCriteria(postData.criteria),
+        });
+        setHasPost(true);
+      } else {
+        setHasPost(false);
+      }
+
+      if (cvResult.status === "fulfilled") {
+        const cvData = cvResult.value.data;
+        const experiences = (cvData.experiences ?? []).map((item) => ({
+          title: item.title,
+          company: item.company,
+          startDate: normalizeDate(item.startDate),
+          endDate: normalizeDate(item.endDate),
+          description: item.description ?? "",
+        }));
+        const educations = (cvData.educations ?? []).map((item) => ({
+          degree: item.degree,
+          institution: item.institution,
+          startDate: normalizeDate(item.startDate),
+          endDate: normalizeDate(item.endDate),
+          gpa: item.gpa ?? null,
+        }));
+
+        if (experiences.length || educations.length || (cvData.skills?.length ?? 0) > 0) {
+          setCv({
+            experiences,
+            educations,
+            skills: cvData.skills ?? [],
+          });
+          setHasCv(true);
+        } else {
+          setHasCv(false);
+        }
+      } else {
+        setHasCv(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   // Sync selectedImage → profile photo preview
   useEffect(() => {
@@ -154,7 +233,11 @@ export default function EditProfilePage() {
   const handleExperienceChange = (index: number, key: "title" | "company" | "startDate" | "endDate" | "description", value: string) => {
     setCv((prev) => {
       const next = [...prev.experiences];
-      next[index] = { ...next[index], [key]: value };
+      if (key === "startDate" || key === "endDate") {
+        next[index] = { ...next[index], [key]: value || null };
+      } else {
+        next[index] = { ...next[index], [key]: value };
+      }
       return { ...prev, experiences: next };
     });
   };
@@ -162,7 +245,15 @@ export default function EditProfilePage() {
   const handleEducationChange = (index: number, key: "degree" | "institution" | "startDate" | "endDate" | "gpa", value: string) => {
     setCv((prev) => {
       const next = [...prev.educations];
-      next[index] = { ...next[index], [key]: value };
+      if (key === "gpa") {
+        const parsedValue = value ? Number(value) : null;
+        const parsed = parsedValue !== null && Number.isNaN(parsedValue) ? null : parsedValue;
+        next[index] = { ...next[index], gpa: parsed }; 
+      } else if (key === "startDate" || key === "endDate") {
+        next[index] = { ...next[index], [key]: value || null };
+      } else {
+        next[index] = { ...next[index], [key]: value };
+      }
       return { ...prev, educations: next };
     });
   };
@@ -200,17 +291,13 @@ export default function EditProfilePage() {
     setLoading((p) => ({ ...p, generate: true }));
     setCriteriaFeedback({ error: "", message: "" });
     try {
-      const res = await fetch("/api/posts/generate-criteria", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetJob: post.targetJob }),
+      const response = await api.post<{ criteria?: string[] }>("/posts/generate-criteria", {
+        targetJob: post.targetJob.trim(),
       });
-      if (!res.ok) throw new Error("Generation failed");
-      const data = (await res.json()) as { criteria?: string[] };
-      setCv((prev) => ({ ...prev, criteria: data.criteria ?? ["", "", ""] }));
+      setPost((prev) => ({ ...prev, criteria: normalizeCriteria(response.data.criteria) }));
       setCriteriaFeedback({ error: "", message: "Criteria generated" });
     } catch (err) {
-      setCriteriaFeedback({ message: "", error: getErrorMessage(err) });
+      setCriteriaFeedback({ message: "", error: getApiErrorMessage(err) });
     } finally {
       setLoading((p) => ({ ...p, generate: false }));
     }
@@ -233,8 +320,8 @@ export default function EditProfilePage() {
       formData.append("targetJob", post.targetJob.trim());
       formData.append("criteria", JSON.stringify(criteria));
 
-      const hasExistingPost = Boolean(post.image);
-      const response = hasExistingPost
+      const isEditingPost = hasPost === true;
+      const response = isEditingPost
         ? await api.put("/posts", formData)
         : await api.post("/posts", formData);
 
@@ -243,6 +330,7 @@ export default function EditProfilePage() {
         setPost((prev) => ({ ...prev, image: nextImage }));
         setSelectedImage(null);
       }
+      if (!isEditingPost) setHasPost(true);
       // if (!res.ok) throw new Error("Publish failed");
       // const data = (await res.json()) as { remainingQuota?: number };
       // if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
@@ -261,8 +349,7 @@ export default function EditProfilePage() {
     setLoading((p) => ({ ...p, submit: true }));
     setPublishCvFeedback({ error: "", message: "" });
     try {
-      const toDateString = (value: Date | string) =>
-        value instanceof Date ? value.toISOString().slice(0, 10) : value;
+      const toDateString = (value: string | null) => (value ? value : null);
 
       const payload = {
         experiences: cv.experiences.map((item) => ({
@@ -282,14 +369,12 @@ export default function EditProfilePage() {
         skills: cv.skills.filter(Boolean),
       };
 
-      try {
+      const isEditingCv = hasCv === true;
+      if (isEditingCv) {
         await api.patch("/cvs/edit", payload);
-      } catch (err) {
-        const message = getApiErrorMessage(err);
-        if (message !== "User CV not found!") {
-          throw err;
-        }
+      } else {
         await api.post("/cvs/add", payload);
+        setHasCv(true);
       }
       //TODO: Handle free first time profile setup
       // if (!res.ok) throw new Error("Publish failed");
@@ -313,7 +398,7 @@ export default function EditProfilePage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Studio</p>
-          <h1 className="text-2xl font-black tracking-tight text-gray-900">Edit Profile</h1>
+          <h1 className="text-2xl font-black tracking-tight text-gray-900">{pageTitle}</h1>
         </div>
         <Link
           href="/profile"
@@ -415,7 +500,10 @@ export default function EditProfilePage() {
         onEducationChange={handleEducationChange}
         onAddExperience={() => {
 
-          setCv((prev) => ({ ...prev, experiences: [...prev.experiences, { title: "", company: "", startDate: new Date(), endDate: new Date(), description: "" }] }))
+          setCv((prev) => ({
+            ...prev,
+            experiences: [...prev.experiences, { title: "", company: "", startDate: null, endDate: null, description: "" }],
+          }))
           console.log(cv)
         }
         }
@@ -423,7 +511,10 @@ export default function EditProfilePage() {
           setCv((prev) => ({ ...prev, experiences: prev.experiences.filter((_, idx) => idx !== i) }))
         }
         onAddEducation={() =>
-          setCv((prev) => ({ ...prev, educations: [...prev.educations, { degree: "", institution: "", startDate: new Date(), endDate: new Date(), gpa: 0 }] }))
+          setCv((prev) => ({
+            ...prev,
+            educations: [...prev.educations, { degree: "", institution: "", startDate: null, endDate: null, gpa: null }],
+          }))
         }
         onRemoveEducation={(i) =>
           setCv((prev) => ({ ...prev, education: prev.educations.filter((_, idx) => idx !== i) }))
