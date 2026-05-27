@@ -83,11 +83,11 @@ function CollapsibleSection({
             <Icon size={16} className={iconColorClass} />
           </div>
           <div>
-            <h3 className="text-sm font-bold tracking-wide text-white">
+            <h3 className="text-sm font-black text-white">
               {title}
             </h3>
             <p
-              className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] ${subtitleColorClass}`}
+              className={`mt-0.5 text-[9px] font-black uppercase tracking-widest ${subtitleColorClass}`}
             >
               {subtitle}
             </p>
@@ -129,7 +129,6 @@ export default function FeedProfileCard({
   const experiences = cv.experiences ?? [];
   const educations = cv.educations ?? [];
   const skills = cv.skills ?? [];
-  const hasProfessionalRating = post.ratings.professional.isRatedByProfessional;
 
   return (
     <section className="lg:col-span-7" style={{ perspective: "1000px" }}>
@@ -137,7 +136,7 @@ export default function FeedProfileCard({
         <button
           onClick={onToggleFlip}
           type="button"
-          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/95 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-indigo-950 shadow-[0_12px_30px_-12px_rgba(15,23,42,0.8)] transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_20px_40px_-15px_rgba(15,23,42,1)] active:scale-[0.98]"
+          className="absolute right-6 top-6 z-50 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/95 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white active:scale-[0.98]"
         >
           {isFlipped ? (
             <>
@@ -161,7 +160,7 @@ export default function FeedProfileCard({
         >
           {/* FRONT CARD (Photo & Target Role) */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-[2rem] bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-4xl bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "pointer-events-none opacity-0" : "z-10 opacity-100"
             }`}
             style={{
@@ -189,23 +188,15 @@ export default function FeedProfileCard({
                 )}
 
                 {/* Overlay gradient for better text legibility if needed */}
-                <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/80 via-transparent to-transparent opacity-60" />
-
-                {hasProfessionalRating ? (
-                  <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-500/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-300 shadow-lg backdrop-blur-md">
-                    <ShieldCheck size={12} className="text-amber-400" />
-                    Pro Rated
-                  </div>
-                ) : null}
               </div>
 
               <div className="mt-5 text-white">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-400">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
                     Target Role
                   </span>
                 </div>
-                <h1 className="mt-3 font-sans text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">
                   {post.targetJob}
                 </h1>
                 <div className="mt-5 flex flex-wrap gap-2.5">
@@ -215,7 +206,7 @@ export default function FeedProfileCard({
                       className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-4 py-2 transition-colors hover:bg-indigo-500/20"
                     >
                       <Target size={12} className="text-indigo-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-100">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-100">
                         {item}
                       </span>
                     </div>
@@ -227,7 +218,7 @@ export default function FeedProfileCard({
 
           {/* BACK CARD (CV & Stats) */}
           <div
-            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-[2rem] border border-white/10 bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
+            className={`absolute inset-0 flex h-full w-full flex-col justify-between rounded-4xl border border-white/10 bg-indigo-950 p-6 shadow-2xl transition-all duration-300 ${
               isFlipped ? "z-20 opacity-100" : "pointer-events-none opacity-0"
             }`}
             style={{
@@ -237,7 +228,7 @@ export default function FeedProfileCard({
             }}
           >
             {/* Ambient Background Glows */}
-            <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(167,139,250,0.1),transparent_50%)]" />
+            <div className="pointer-events-none absolute inset-0 rounded-4xl bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(167,139,250,0.1),transparent_50%)]" />
 
             <div className="relative mt-14 h-[calc(100%-4rem)] overflow-y-auto pr-3 custom-scrollbar">
               <div className="space-y-6 pb-6">
@@ -264,10 +255,10 @@ export default function FeedProfileCard({
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-2xl font-black tracking-tight text-transparent">
+                          <h2 className="text-2xl font-black tracking-tight text-white">
                             @{username}
                           </h2>
-                          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-indigo-400">
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-indigo-400">
                             {post.targetJob}
                           </p>
                         </div>
@@ -294,10 +285,10 @@ export default function FeedProfileCard({
                             key={item.label}
                             className="group flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-4 py-3 transition-colors hover:bg-black/30"
                           >
-                            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400/80">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400/80">
                               {item.label}
                             </span>
-                            <span className="max-w-[65%] truncate text-right text-xs font-semibold text-indigo-100 group-hover:text-white">
+                            <span className="max-w-[65%] truncate text-right text-xs font-bold text-indigo-100 group-hover:text-white">
                               {item.value}
                             </span>
                           </div>
@@ -373,17 +364,17 @@ export default function FeedProfileCard({
                           >
                             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                               <div>
-                                <h4 className="text-base font-bold text-white group-hover:text-violet-100 transition-colors">
+                                <h4 className="text-sm font-black text-white transition-colors group-hover:text-violet-100">
                                   {title}
                                 </h4>
                                 {company ? (
-                                  <p className="mt-1 text-xs font-semibold text-violet-300/80">
+                                  <p className="mt-1 text-xs font-medium text-violet-300/80">
                                     {company}
                                   </p>
                                 ) : null}
                               </div>
                               {meta ? (
-                                <span className="self-start whitespace-nowrap rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-violet-300 sm:self-auto">
+                                <span className="self-start whitespace-nowrap rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-violet-300 sm:self-auto">
                                   {meta}
                                 </span>
                               ) : null}
@@ -438,7 +429,7 @@ export default function FeedProfileCard({
                               key={`${title}-${index}`}
                               className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/5"
                             >
-                              <h5 className="text-sm font-bold text-white">
+                              <h5 className="text-sm font-black text-white">
                                 {title}
                               </h5>
                               {school ? (
@@ -447,7 +438,7 @@ export default function FeedProfileCard({
                                 </p>
                               ) : null}
                               {meta ? (
-                                <span className="mt-3 inline-block rounded-md border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-400">
+                                <span className="mt-3 inline-block rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-cyan-400">
                                   {meta}
                                 </span>
                               ) : null}
@@ -474,7 +465,7 @@ export default function FeedProfileCard({
                         {skills.map((item) => (
                           <span
                             key={item}
-                            className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                            className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-300 transition-colors hover:bg-emerald-500/20"
                           >
                             {item}
                           </span>
