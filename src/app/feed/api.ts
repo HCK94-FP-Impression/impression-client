@@ -1,10 +1,11 @@
 import { api } from "@/constants/constants";
 import type {
-  CurrentUser,
   FeedResponse,
   SubmitRatingPayload,
   SubmitRatingResponse,
 } from "./types";
+
+export { getCurrentUser } from "@/api/user";
 
 export async function getFeedPost(skipPostId?: number) {
   const response = await api.get<FeedResponse>("/posts/feed", {
@@ -23,11 +24,6 @@ export async function submitRating(payload: SubmitRatingPayload) {
   });
 
   return response.data;
-}
-
-export async function getCurrentUser() {
-  const response = await api.get<{ user: CurrentUser }>("/auth/me");
-  return response.data.user;
 }
 
 export async function getMyTargetJob(): Promise<string | null> {
