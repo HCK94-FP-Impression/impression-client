@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
-import type { FeedCvItem, FeedPost } from "../types";
+import type { FeedCvItem, FeedPost } from "../../../types";
 import PerformanceRadar, { type RadarCategory } from "./performanceRadar";
 
 type FeedProfileCardProps = {
@@ -83,8 +83,12 @@ function CollapsibleSection({
             <Icon size={16} className={iconColorClass} />
           </div>
           <div>
-            <h3 className="text-sm font-bold tracking-wide text-white">{title}</h3>
-            <p className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] ${subtitleColorClass}`}>
+            <h3 className="text-sm font-bold tracking-wide text-white">
+              {title}
+            </h3>
+            <p
+              className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] ${subtitleColorClass}`}
+            >
               {subtitle}
             </p>
           </div>
@@ -183,7 +187,7 @@ export default function FeedProfileCard({
                     </span>
                   </div>
                 )}
-                
+
                 {/* Overlay gradient for better text legibility if needed */}
                 <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/80 via-transparent to-transparent opacity-60" />
 
@@ -237,7 +241,6 @@ export default function FeedProfileCard({
 
             <div className="relative mt-14 h-[calc(100%-4rem)] overflow-y-auto pr-3 custom-scrollbar">
               <div className="space-y-6 pb-6">
-                
                 {/* Header / Radar Section */}
                 <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-900/60 via-indigo-900/40 to-indigo-950/80 p-6 shadow-2xl backdrop-blur-md">
                   <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl" />
@@ -282,7 +285,9 @@ export default function FeedProfileCard({
                           },
                           {
                             label: "Created",
-                            value: new Date(post.createdAt).toLocaleDateString(),
+                            value: new Date(
+                              post.createdAt,
+                            ).toLocaleDateString(),
                           },
                         ].map((item) => (
                           <div
@@ -392,7 +397,9 @@ export default function FeedProfileCard({
                         );
                       })
                     ) : (
-                      <EmptyState>No work experience listed in this CV.</EmptyState>
+                      <EmptyState>
+                        No work experience listed in this CV.
+                      </EmptyState>
                     )}
                   </div>
                 </CollapsibleSection>
