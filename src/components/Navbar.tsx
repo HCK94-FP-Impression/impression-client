@@ -113,10 +113,6 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="hidden rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 lg:block">
-                Guest mode
-              </span>
-
               <Link
                 href="/login"
                 className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-gray-600 transition-colors hover:text-indigo-600"

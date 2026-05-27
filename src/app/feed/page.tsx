@@ -10,14 +10,13 @@ import {
   getFeedPost,
   submitRating,
   getCurrentUser,
-  getMyTargetJob,
 } from "./api";
-import { getApiErrorMessage } from "@/constants/constants";
+import { api, getApiErrorMessage } from "@/constants/constants";
 import {
   isUnauthorizedError,
   redirectToLogin,
-  requireClientAuth,
 } from "@/constants/authProxy";
+import NoPostBanner from "@/components/NoPostBanner";
 import type { FeedResponse } from "../../types";
 
 type FeedbackState = {
@@ -67,6 +66,7 @@ export default function FeedPage() {
     null,
   );
   const [myTargetJob, setMyTargetJob] = useState<string | null>(null);
+  const [hasMyPost, setHasMyPost] = useState<boolean | null>(null);
 
   const post = feed?.post ?? null;
 
@@ -87,16 +87,21 @@ export default function FeedPage() {
         const user = await getCurrentUser();
         setUserRole(user.role);
       } catch {}
-      const job = await getMyTargetJob();
-      setMyTargetJob(job);
+
+      try {
+        const res = await api.get<{ post: { targetJob: string } }>("/posts/my-post");
+        setMyTargetJob(res.data.post.targetJob);
+        setHasMyPost(true);
+      } catch (err) {
+        setMyTargetJob(null);
+        setHasMyPost(isUnauthorizedError(err) ? null : false);
+      }
     }
     void loadUserContext();
   }, []);
 
   const loadFeed = useCallback(
     async (skipPostId?: number) => {
-      if (!requireClientAuth(router)) return;
-
       setIsLoading(true);
       setFeedback(null);
 
@@ -138,7 +143,6 @@ export default function FeedPage() {
 
   const handleSubmitRating = async () => {
     if (!post) return;
-    if (!requireClientAuth(router)) return;
     if (scores.some((s) => s === null)) return;
 
     setIsSubmitting(true);
@@ -216,6 +220,8 @@ export default function FeedPage() {
   return (
     <div className="mx-auto w-full max-w-7xl py-2">
       <FeedbackNotice feedback={feedback} />
+
+      {hasMyPost === false && <NoPostBanner />}
 
       {showCycleNotice && (
         <div className="mb-6 animate-fade-out rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">

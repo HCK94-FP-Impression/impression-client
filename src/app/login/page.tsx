@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import {
   KeyRound,
@@ -9,24 +9,30 @@ import {
   LoaderCircle,
   AlertCircle,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import { api, getApiErrorMessage } from "@/constants/constants";
 import { persistAuthSession } from "@/constants/authProxy";
 import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const rawFrom = searchParams.get("from") ?? "";
+  const redirectTo =
+    rawFrom.startsWith("/") && !rawFrom.startsWith("//") ? rawFrom : "/feed";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit: NonNullable<React.ComponentProps<"form">["onSubmit"]> = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -35,7 +41,7 @@ export default function LoginPage() {
       const res = await api.post("/auth/login", form);
       if (res.status >= 200 && res.status < 300) {
         persistAuthSession(res.data);
-        router.push("/feed");
+        router.push(redirectTo);
       }
     } catch (error) {
       setError(getApiErrorMessage(error, "An error occured. Please try again."));
@@ -134,5 +140,13 @@ export default function LoginPage() {
         </div>
       </form>
     </AuthSplitLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
