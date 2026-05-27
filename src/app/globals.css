@@ -203,3 +203,12 @@ body::after {
 @utility rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@utility animate-fade-out {
+  animation: fade-out 1s ease-in 4s forwards;
+}

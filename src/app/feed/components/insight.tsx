@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import {
+  AlignStartVertical,
   ArrowDownUp,
   LoaderCircle,
+  MessageSquare,
   MessageSquareText,
   SendHorizonal,
   ShieldCheck,
-  Sparkles,
+  Users,
 } from "lucide-react";
 import type {
   FeedPost,
@@ -205,7 +207,7 @@ export default function FeedInsightPanel({
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
-            <MessageSquareText size={14} className="text-indigo-400" />
+            <AlignStartVertical size={14} className="text-indigo-400" />
           </div>
           <div>
             <h3 className="text-sm font-black uppercase tracking-[0.2em] text-black">
@@ -216,12 +218,6 @@ export default function FeedInsightPanel({
             </p>
           </div>
         </div>
-
-        {post.ratings.professional.isRatedByProfessional ? (
-          <span className="flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-500">
-            <ShieldCheck size={9} /> Pro Rated
-          </span>
-        ) : null}
       </div>
 
       <div className="space-y-4">
@@ -240,15 +236,15 @@ export default function FeedInsightPanel({
           />
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-white/5 bg-indigo-950 shadow-xl">
-          {isProfessional && (
+        {isProfessional ? (
+          <div className="overflow-hidden rounded-3xl border border-white/5 bg-indigo-950 shadow-xl">
             <div className="border-b border-white/5 bg-indigo-900/40 px-6 py-5">
               <p className="mb-3 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">
                 Your Insight
               </p>
               <div className="flex gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-950 text-indigo-300">
-                  <Sparkles size={14} />
+                  <MessageSquareText size={14} />
                 </div>
                 <textarea
                   value={insightDraft}
@@ -286,59 +282,73 @@ export default function FeedInsightPanel({
                 </p>
               )}
             </div>
-          )}
 
-          <div className="flex items-center justify-between border-b border-white/5 px-6 py-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-400">
-              {insights.length} insights
-            </p>
-            <div className="flex items-center gap-1 rounded-xl border border-white/5 bg-black/30 p-1">
-              <ArrowDownUp size={9} className="ml-1 text-indigo-400/60" />
-              {(["newest", "highest"] as SortMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setSort(mode)}
-                  className={`rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
-                    sort === mode
-                      ? "bg-indigo-950 text-indigo-300 shadow-sm"
-                      : "text-indigo-400 hover:text-indigo-200"
-                  }`}
-                >
-                  {mode === "newest" ? "Newest" : "Highest"}
-                </button>
-              ))}
+            <div className="flex items-center justify-between border-b border-white/5 px-6 py-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-400">
+                {insights.length} insights
+              </p>
+              <div className="flex items-center gap-1 rounded-xl border border-white/5 bg-black/30 p-1">
+                <ArrowDownUp size={9} className="ml-1 text-indigo-400/60" />
+                {(["newest", "highest"] as SortMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setSort(mode)}
+                    className={`rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                      sort === mode
+                        ? "bg-indigo-950 text-indigo-300 shadow-sm"
+                        : "text-indigo-400 hover:text-indigo-200"
+                    }`}
+                  >
+                    {mode === "newest" ? "Newest" : "Highest"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="max-h-130 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10">
-            {sortedInsights.length ? (
-              sortedInsights.map((insight, index) => (
-                <InsightItem
-                  key={`${insight.username}-${insight.ratingType}-${index}`}
-                  insight={insight}
-                  index={index}
-                />
-              ))
-            ) : (
-              <div className="px-6 py-10 text-center">
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-white">
-                  No professional insights yet
-                </p>
-                <p className="mx-auto mt-2 max-w-md text-xs font-medium leading-5 text-indigo-400">
-                  Professional comments will appear here when the server returns
-                  them for this post.
+            <div className="max-h-130 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10">
+              {sortedInsights.length ? (
+                sortedInsights.map((insight, index) => (
+                  <InsightItem
+                    key={`${insight.username}-${insight.ratingType}-${index}`}
+                    insight={insight}
+                    index={index}
+                  />
+                ))
+              ) : (
+                <div className="px-6 py-10 text-center">
+                  <p className="text-sm font-black uppercase tracking-[0.2em] text-white">
+                    No professional insights yet
+                  </p>
+                  <p className="mx-auto mt-2 max-w-md text-xs font-medium leading-5 text-indigo-400">
+                    Professional comments will appear here when the server returns
+                    them for this post.
+                  </p>
+                </div>
+              )}
+
+              <div className="border-t border-white/5 px-6 py-4 text-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-500">
+                  {insights.length} insights total
                 </p>
               </div>
-            )}
-
-            <div className="border-t border-white/5 px-6 py-4 text-center">
-              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-500">
-                {insights.length} insights total
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-3xl border border-cyan-200/50 bg-cyan-50/60 px-6 py-4">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-400/10">
+              <Users size={14} className="text-cyan-600" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-cyan-700">
+                Social Mode
+              </p>
+              <p className="mt-0.5 text-[10px] font-medium text-cyan-600/70">
+                Professional insights are only visible to recruiters and peers in the same field.
               </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
