@@ -42,7 +42,6 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/60 bg-white/40 backdrop-blur-2xl shadow-sm shadow-slate-900/5">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-8">
-
         {/* Logo */}
         <Link href="/" className="group flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-950 text-white transition-transform group-hover:rotate-12">
@@ -71,7 +70,10 @@ export default function Navbar() {
               Feed
             </Link>
 
-            <Link href="/profile" className={navLinkClassName(pathname, "/profile")}>
+            <Link
+              href="/profile"
+              className={navLinkClassName(pathname, "/profile")}
+            >
               Profile
             </Link>
           </nav>
@@ -80,7 +82,6 @@ export default function Navbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-
               {/* Quota */}
               <div className="hidden items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 sm:flex">
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white">
@@ -105,7 +106,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-xl p-2.5 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                className="rounded-xl cursor-pointer p-2.5 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-600"
               >
                 <LogOut size={20} />
               </button>

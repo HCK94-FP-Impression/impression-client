@@ -27,7 +27,9 @@ export default function ForumPanel({ communityId }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Only one post's comments open at a time (Disqus single-thread limitation)
-  const [openCommentPostId, setOpenCommentPostId] = useState<number | null>(null);
+  const [openCommentPostId, setOpenCommentPostId] = useState<number | null>(
+    null,
+  );
 
   const loadPosts = useCallback(async () => {
     setIsLoading(true);
@@ -53,7 +55,11 @@ export default function ForumPanel({ communityId }: Props) {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const newPost = await createCommunityPost(communityId, title.trim(), content.trim());
+      const newPost = await createCommunityPost(
+        communityId,
+        title.trim(),
+        content.trim(),
+      );
       setPosts((prev) => [newPost, ...prev]);
       setTitle("");
       setContent("");
@@ -99,7 +105,7 @@ export default function ForumPanel({ communityId }: Props) {
           <button
             type="submit"
             disabled={isSubmitting || !title.trim() || !content.trim()}
-            className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-950 text-white transition-all hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="absolute bottom-3 right-3 flex cursor-pointer h-8 w-8 items-center justify-center rounded-xl bg-indigo-950 text-white transition-all hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSubmitting ? (
               <LoaderCircle size={14} className="animate-spin" />
@@ -170,7 +176,7 @@ export default function ForumPanel({ communityId }: Props) {
                 <button
                   type="button"
                   onClick={() => toggleComments(post.id)}
-                  className="flex w-full items-center justify-between border-t border-gray-100 px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 transition-colors hover:bg-gray-50 hover:text-indigo-600"
+                  className="flex cursor-pointer w-full items-center justify-between border-t border-gray-100 px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 transition-colors hover:bg-gray-50 hover:text-indigo-600"
                 >
                   <span>{isOpen ? "Hide Comments" : "Show Comments"}</span>
                   {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}

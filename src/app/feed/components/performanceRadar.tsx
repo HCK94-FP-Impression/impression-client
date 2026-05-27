@@ -238,7 +238,7 @@ export default function PerformanceRadar({
               key={category}
               type="button"
               onClick={() => onActiveRadarChange(category)}
-              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest transition-all duration-200 ${
+              className={`flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest transition-all duration-200 ${
                 isActive
                   ? item.activeClass
                   : "text-indigo-400/60 hover:text-indigo-200"

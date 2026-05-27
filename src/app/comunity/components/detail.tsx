@@ -10,7 +10,11 @@ import {
   Trophy,
   TrendingUp,
 } from "lucide-react";
-import type { CommunityItem, MembershipStatus, CommunityDashboard } from "../types";
+import type {
+  CommunityItem,
+  MembershipStatus,
+  CommunityDashboard,
+} from "../types";
 import { DOMAIN_META_DARK } from "../data";
 import PendingApprovalQueue from "./PendingApprovalQueue";
 import ForumPanel from "./ForumPanel";
@@ -52,7 +56,7 @@ export default function CommunityDetail({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-indigo-950 transition-colors hover:text-indigo-400"
+        className="inline-flex cursor-pointer items-center gap-2 text-[11px] font-black uppercase tracking-widest text-indigo-950 transition-colors hover:text-indigo-400"
       >
         <ArrowLeft size={12} /> Back to Communities
       </button>
@@ -78,7 +82,7 @@ export default function CommunityDetail({
               type="button"
               onClick={() => onJoin(community.id)}
               disabled={isJoining}
-              className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-indigo-950 transition-all hover:-translate-y-0.5 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-2xl bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-indigo-950 transition-all hover:-translate-y-0.5 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isJoining && <Loader2 size={11} className="animate-spin" />}
               Join Community
@@ -142,16 +146,27 @@ export default function CommunityDetail({
           {/* Statistics */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: "Total Members", value: dashboard.statistics.totalMembers },
+              {
+                label: "Total Members",
+                value: dashboard.statistics.totalMembers,
+              },
               { label: "Total Posts", value: dashboard.statistics.totalPosts },
-              { label: "Avg Social Score", value: dashboard.statistics.avgSocialScore.toFixed(2) },
-              { label: "Avg Pro Score", value: dashboard.statistics.avgProfessionalScore.toFixed(2) },
+              {
+                label: "Avg Social Score",
+                value: dashboard.statistics.avgSocialScore.toFixed(2),
+              },
+              {
+                label: "Avg Pro Score",
+                value: dashboard.statistics.avgProfessionalScore.toFixed(2),
+              },
             ].map((stat) => (
               <div
                 key={stat.label}
                 className="rounded-3xl border border-indigo-900/40 bg-indigo-950 p-5 text-center"
               >
-                <p className="mb-1 text-xl font-black text-white">{stat.value}</p>
+                <p className="mb-1 text-xl font-black text-white">
+                  {stat.value}
+                </p>
                 <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400/60">
                   {stat.label}
                 </p>
@@ -186,7 +201,9 @@ export default function CommunityDetail({
                 </h2>
               </div>
               {dashboard.leaderboard.social.length === 0 ? (
-                <p className="text-xs font-medium text-gray-400">No data yet.</p>
+                <p className="text-xs font-medium text-gray-400">
+                  No data yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {dashboard.leaderboard.social.map((entry, i) => (
@@ -195,7 +212,13 @@ export default function CommunityDetail({
                       className="flex items-center gap-3 rounded-2xl bg-gray-50/80 px-4 py-3"
                     >
                       <span className="w-5 text-center text-[10px] font-black text-gray-400">
-                        {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`}
+                        {i === 0
+                          ? "🥇"
+                          : i === 1
+                            ? "🥈"
+                            : i === 2
+                              ? "🥉"
+                              : `${i + 1}`}
                       </span>
                       <span className="flex-1 text-[11px] font-black text-gray-800">
                         @{entry.username}
@@ -221,7 +244,9 @@ export default function CommunityDetail({
                 </h2>
               </div>
               {dashboard.leaderboard.professional.length === 0 ? (
-                <p className="text-xs font-medium text-indigo-400/40">No data yet.</p>
+                <p className="text-xs font-medium text-indigo-400/40">
+                  No data yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {dashboard.leaderboard.professional.map((entry, i) => (
@@ -230,7 +255,13 @@ export default function CommunityDetail({
                       className="flex items-center gap-3 rounded-2xl bg-indigo-900/40 px-4 py-3"
                     >
                       <span className="w-5 text-center text-[10px] font-black text-indigo-400/60">
-                        {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`}
+                        {i === 0
+                          ? "🥇"
+                          : i === 1
+                            ? "🥈"
+                            : i === 2
+                              ? "🥉"
+                              : `${i + 1}`}
                       </span>
                       <span className="flex-1 text-[11px] font-black text-white">
                         @{entry.username}
