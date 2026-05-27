@@ -155,6 +155,7 @@ export default function FeedPage() {
         insight: isProfessional ? insightDraft : undefined,
       });
 
+      window.dispatchEvent(new CustomEvent("quota-updated"));
       await loadFeed(post.id);
     } catch (error) {
       if (isUnauthorizedError(error)) {
