@@ -15,7 +15,7 @@ export type CommunityMemberRecord = {
   communityId: number;
   userId: number;
   status: "pending" | "approved";
-  User: { id: number; username: string };
+  User: { id: number; username: string } | null;
 };
 
 export type LeaderboardEntry = {
@@ -39,6 +39,17 @@ export type CommunityDashboard = {
     avgSocialScore: number;
     avgProfessionalScore: number;
   };
+};
+
+export type ForumPost = {
+  id: number;
+  communityId: number;
+  userId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  User: { id: number; username: string } | null;
 };
 
 // API response shapes
