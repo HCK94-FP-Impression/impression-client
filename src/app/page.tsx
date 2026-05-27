@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -8,11 +9,11 @@ import {
   ShieldCheck,
   BarChart3,
 } from "lucide-react";
+import { hasClientAuthSession } from "@/constants/authProxy";
+import { getCurrentUser } from "@/api/user";
+import type { CurrentUser } from "@/api/user";
 
-// sementara dummy dulu untuk UI
 const appName = "Impression";
-const isAuthenticated = true;
-const quota = 24;
 const uploadQuotaRequirement = 50;
 
 const landingSteps = [
@@ -23,6 +24,20 @@ const landingSteps = [
 ];
 
 export default function Home() {
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const authenticated = hasClientAuthSession();
+    setIsAuthenticated(authenticated);
+    if (!authenticated) return;
+    getCurrentUser()
+      .then(setUser)
+      .catch(() => {});
+  }, []);
+
+  const quota = user?.quota ?? 0;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
@@ -119,10 +134,7 @@ export default function Home() {
 
               <p className="mt-4 text-sm font-medium leading-relaxed text-indigo-200/80">
                 {isAuthenticated
-                  ? `${Math.max(
-                      uploadQuotaRequirement - quota,
-                      0,
-                    )} more ratings required to unlock uploads.`
+                  ? `${Math.max(uploadQuotaRequirement - quota, 0)} more ratings required to unlock uploads.`
                   : "Collect points to unlock uploads."}
               </p>
             </div>
