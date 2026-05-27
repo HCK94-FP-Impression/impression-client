@@ -14,8 +14,12 @@ import {
   GraduationCap,
   LoaderCircle,
   Sparkles,
+  WandSparkles,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import ProfileRadar from "./components/radar";
+import axios from "axios";
 import { api, getApiErrorMessage } from "@/constants/constants";
 import { isUnauthorizedError, redirectToLogin } from "@/constants/authProxy";
 import { useRouter } from "next/navigation";
@@ -91,32 +95,42 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const [userRes, postRes] = await Promise.all([
-          api.get<{ user: CurrentUser }>("/auth/me"),
-          api.get<{
+        // Load user — 401 → redirect to login
+        try {
+          const userRes = await api.get<{ user: CurrentUser }>("/auth/me");
+          setUser(userRes.data.user);
+        } catch (err) {
+          if (isUnauthorizedError(err)) {
+            redirectToLogin(router);
+            return;
+          }
+        }
+
+        // Load post — 404 means no post yet, not a real error
+        try {
+          const postRes = await api.get<{
             post: MyPost;
             criteriaBreakdown: CriteriaBreakdown;
             insights: ProfileInsight[];
-          }>("/posts/my-post"),
-        ]);
+          }>("/posts/my-post");
+          setPost(postRes.data.post);
+          setBreakdown(postRes.data.criteriaBreakdown);
+          setInsights(postRes.data.insights);
+        } catch (err) {
+          const status = axios.isAxiosError(err) ? err.response?.status : null;
+          if (status !== 404) {
+            setError(getApiErrorMessage(err, "Failed to load profile"));
+          }
+          // 404 → post stays null → empty state shown
+        }
 
-        setUser(userRes.data.user);
-        setPost(postRes.data.post);
-        setBreakdown(postRes.data.criteriaBreakdown);
-        setInsights(postRes.data.insights);
-
+        // Load CV — optional, never blocks
         try {
           const cvRes = await api.get<Cv>("/cvs");
           setCv(cvRes.data);
         } catch {
           setCv(null);
         }
-      } catch (err) {
-        if (isUnauthorizedError(err)) {
-          redirectToLogin(router);
-          return;
-        }
-        setError(getApiErrorMessage(err, "Failed to load profile"));
       } finally {
         setIsLoading(false);
       }
@@ -163,30 +177,92 @@ export default function ProfilePage() {
     );
   }
 
-  if (error || !post) {
+  if (!post && !error) {
     return (
-      <div className="flex min-h-[520px] items-center justify-center rounded-3xl border border-gray-100 bg-white/70 p-8 text-center">
-        <div>
-          <p className="text-sm font-black uppercase tracking-[0.25em] text-gray-900">
-            {error || "No profile found"}
-          </p>
-          <p className="mt-3 text-xs text-gray-400">
-            {!post && !error
-              ? "You haven't created a profile post yet."
-              : "Something went wrong loading your profile."}
-          </p>
-          {!post && !error && (
-            <Link
-              href="/studio"
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-indigo-950 px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white"
-            >
-              Create Profile
-            </Link>
-          )}
+      <div className="mx-auto w-full max-w-2xl py-12">
+        <div className="relative overflow-hidden rounded-4xl border border-indigo-900/40 bg-indigo-950 p-12 text-center shadow-2xl shadow-indigo-900/20">
+          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-violet-500/20 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col items-center gap-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/30 bg-indigo-500/10">
+              <WandSparkles size={28} className="text-indigo-300" />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
+                No Profile Yet
+              </p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+                Build your profile in Studio
+              </h2>
+              <p className="mx-auto mt-3 max-w-sm text-sm font-medium leading-relaxed text-indigo-300/70">
+                Upload a photo, fill in your CV, and set your target job so the community can rate your profile.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/studio"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-xl transition-all hover:-translate-y-0.5 hover:bg-indigo-100"
+              >
+                <WandSparkles size={13} />
+                Go to Studio
+              </Link>
+            </div>
+
+            <div className="mt-2 grid grid-cols-3 gap-4 border-t border-indigo-900/40 pt-6 text-center">
+              {[
+                { icon: Star, label: "Rating", desc: "Get scored by the community" },
+                { icon: Zap, label: "Quota", desc: "Earn points by rating others" },
+                { icon: Target, label: "Feedback", desc: "Professional insights from peers" },
+              ].map(({ icon: Icon, label, desc }) => (
+                <div key={label} className="flex flex-col items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
+                    <Icon size={14} className="text-indigo-400" />
+                  </div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-indigo-300">
+                    {label}
+                  </p>
+                  <p className="text-[9px] font-medium leading-tight text-indigo-400/60">
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex min-h-130 items-center justify-center rounded-4xl border border-rose-100 bg-rose-50/60 p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-200 bg-rose-100">
+            <AlertCircle size={22} className="text-rose-500" />
+          </div>
+          <div>
+            <p className="text-sm font-black uppercase tracking-widest text-rose-700">
+              Failed to Load Profile
+            </p>
+            <p className="mt-2 text-xs font-medium text-rose-500/70">{error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-rose-700"
+          >
+            <RefreshCw size={12} />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) return null;
 
   return (
     <div className="flex flex-col gap-5">
