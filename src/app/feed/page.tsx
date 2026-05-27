@@ -37,7 +37,7 @@ function FeedbackNotice({ feedback }: { feedback: FeedbackState }) {
 
 function LoadingState() {
   return (
-    <div className="flex min-h-[520px] items-center justify-center rounded-3xl border border-gray-100 bg-white/70 shadow-sm">
+    <div className="flex min-h-130 items-center justify-center rounded-3xl border border-gray-100 bg-white/70 shadow-sm">
       <div className="flex flex-col items-center gap-4 text-center">
         <LoaderCircle size={30} className="animate-spin text-indigo-500" />
         <div>
@@ -62,12 +62,20 @@ export default function FeedPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [showCycleNotice, setShowCycleNotice] = useState(false);
   const [userRole, setUserRole] = useState<"job_seeker" | "recruiter" | null>(
     null,
   );
   const [myTargetJob, setMyTargetJob] = useState<string | null>(null);
 
   const post = feed?.post ?? null;
+
+  useEffect(() => {
+    if (!feed?.cycleCompleted) return;
+    setShowCycleNotice(true);
+    const t = window.setTimeout(() => setShowCycleNotice(false), 5000);
+    return () => window.clearTimeout(t);
+  }, [feed?.cycleCompleted]);
 
   const isProfessional =
     userRole === "recruiter" ||
@@ -179,7 +187,7 @@ export default function FeedPage() {
     return (
       <div className="mx-auto w-full max-w-7xl py-2">
         <FeedbackNotice feedback={feedback} />
-        <div className="flex min-h-[520px] items-center justify-center rounded-3xl border border-gray-100 bg-white/70 p-8 text-center shadow-sm">
+        <div className="flex min-h-130 items-center justify-center rounded-3xl border border-gray-100 bg-white/70 p-8 text-center shadow-sm">
           <div className="max-w-md">
             <p className="text-sm font-black uppercase tracking-[0.25em] text-gray-900">
               {feed?.message ?? "No posts available"}
@@ -209,12 +217,11 @@ export default function FeedPage() {
     <div className="mx-auto w-full max-w-7xl py-2">
       <FeedbackNotice feedback={feedback} />
 
-      {feed?.cycleCompleted ? (
-        <div className="mb-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">
-          Cycle completed. The server is now returning random posts from all
-          available profiles.
+      {showCycleNotice && (
+        <div className="mb-6 animate-fade-out rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">
+          Cycle completed — feed will now return random posts from all profiles.
         </div>
-      ) : null}
+      )}
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
         <FeedProfileCard
@@ -227,6 +234,7 @@ export default function FeedPage() {
           scores={scores}
           isSubmitting={isSubmitting}
           isSkipping={isLoading && !isSubmitting}
+          isProfessional={isProfessional}
           onScoreChange={handleScoreChange}
           onSubmit={handleSubmitRating}
           onSkip={handleSkipPost}

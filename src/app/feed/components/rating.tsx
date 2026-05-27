@@ -1,12 +1,20 @@
 "use client";
 
-import { Info, LoaderCircle, RefreshCw, Send } from "lucide-react";
+import {
+  Info,
+  LoaderCircle,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 type FeedRatingPanelProps = {
   criteria: string[];
   scores: Array<number | null>;
   isSubmitting: boolean;
   isSkipping: boolean;
+  isProfessional: boolean;
   onScoreChange: (index: number, level: number) => void;
   onSubmit: () => void;
   onSkip: () => void;
@@ -24,6 +32,7 @@ export default function FeedRatingPanel({
   scores,
   isSubmitting,
   isSkipping,
+  isProfessional,
   onScoreChange,
   onSubmit,
   onSkip,
@@ -34,7 +43,7 @@ export default function FeedRatingPanel({
 
   return (
     <section className="lg:col-span-5">
-      <div className="mb-6">
+      <div className="mb-3">
         <h2 className="font-sans text-3xl font-black tracking-tight text-indigo-950">
           RATE THIS PROFILE
         </h2>
@@ -46,7 +55,19 @@ export default function FeedRatingPanel({
 
       <div className="mb-6">
         <div className="flex items-end justify-between pb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">
-          <span>Rated Criteria</span>
+          <div>
+            <div className="mt-3">
+              {isProfessional ? (
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-600">
+                  <ShieldCheck size={10} /> Professional Mode
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-cyan-600">
+                  <Users size={10} /> Social Mode
+                </span>
+              )}
+            </div>
+          </div>
 
           <span className="font-extrabold text-gray-900">
             {completed} / {total}
@@ -61,7 +82,7 @@ export default function FeedRatingPanel({
         </div>
       </div>
 
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-4">
         {criteria.map((label, index) => (
           <div key={`${label}-${index}`}>
             <div>
@@ -80,7 +101,7 @@ export default function FeedRatingPanel({
                     type="button"
                     onClick={() => onScoreChange(index, option.level)}
                     disabled={isSubmitting || isSkipping}
-                    className={`group flex min-h-20 cursor-pointer flex-col items-center justify-center rounded-2xl border px-2 py-4 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`group flex min-h-5 cursor-pointer flex-col items-center justify-center rounded-2xl border px-2 py-3 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
                       active
                         ? "scale-[1.01] border-indigo-950 bg-indigo-950 text-white shadow-lg"
                         : "border-gray-100 bg-white shadow-sm hover:border-indigo-200"
