@@ -1,30 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { SubmitEvent } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowRight,
-  Coins,
-  FileText,
-  Lock,
-  Send,
-  Sparkles,
-  WandSparkles,
+  // ArrowRight,
+  // Coins,
+  // FileText,
+  // Lock,
+  // Send,
+  // Sparkles,
+  // WandSparkles,
 } from "lucide-react";
-import ProfileEditor from "./components/ProfileEditor";
-import { initialProfile, type ProfileData } from "../profile/data";
+import CvEditor, { CvData } from "./components/CvEditor";
+import PostEditor, { PostData } from "./components/PostEditor";
+import { api, getApiErrorMessage } from "@/constants/constants";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type FeedbackState = { error: string; message: string };
-type LoadingState = { generate: boolean; submit: boolean; parse: boolean };
+export type FeedbackState = { error: string; message: string };
+export type LoadingState = { generate: boolean; submit: boolean; parse: boolean };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const PUBLISH_COST = 5;   // rating points needed to republish
-const CV_TOKEN_COST = 3;  // CV tokens needed per parse (separate pool)
+/* const PUBLISH_COST = 5;   // rating points needed to republish
+const CV_TOKEN_COST = 3;  // CV tokens needed per parse (separate pool) */
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,19 +36,7 @@ const getErrorMessage = (error: unknown, fallback = "Something went wrong") => {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const Notice = ({ message, tone = "error" }: { message: string; tone?: "error" | "success" }) => {
-  if (!message) return null;
-  const cls = tone === "success"
-    ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-    : "border-rose-100 bg-rose-50 text-rose-600";
-  return (
-    <div className={`rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${cls}`}>
-      {message}
-    </div>
-  );
-};
-
-const GlassCard = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
+/* const GlassCard = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
   <div className={`rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl ${className}`}>
     {children}
   </div>
@@ -71,78 +60,114 @@ const TokenBadge = ({ tokens, cost, label }: { tokens: number; cost: number; lab
   }`}>
     <Coins size={9} /> {tokens} {label}
   </div>
-);
+); */
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EditProfilePage() {
   // Profile data — live, no explicit save needed
-  const [profile, setProfile] = useState<ProfileData>(initialProfile);
+  const [cv, setCv] = useState<CvData>({
+    experiences: [],
+    educations: [],
+    skills: []
+  });
+
+  const [post, setPost] = useState<PostData>({
+    image: "",
+    targetJob: "",
+    criteria: ["", "", ""]
+  });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   // Token pools
-  const [ratingPoints, setRatingPoints] = useState(0);
-  const [cvTokens, setCvTokens] = useState(CV_TOKEN_COST);   // new users: 1 free parse
-  const [hasPublishedBefore, setHasPublishedBefore] = useState(false);
+  // const [ratingPoints, setRatingPoints] = useState(0);
+  // const [cvTokens, setCvTokens] = useState(CV_TOKEN_COST);   // new users: 1 free parse
+  // const [hasPublishedBefore, setHasPublishedBefore] = useState(false);
 
   // CV Parser
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [parseFeedback, setParseFeedback] = useState<FeedbackState>({ error: "", message: "" });
+  // const [cvFile, setCvFile] = useState<File | null>(null);
+  // const [parseFeedback, setParseFeedback] = useState<FeedbackState>({ error: "", message: "" });
 
   // Criteria
   const [criteriaMode, setCriteriaMode] = useState<"ai" | "manual">("ai");
   const [criteriaFeedback, setCriteriaFeedback] = useState<FeedbackState>({ error: "", message: "" });
 
   // Publish
-  const [publishFeedback, setPublishFeedback] = useState<FeedbackState>({ error: "", message: "" });
-  const [published, setPublished] = useState(false);
+  const [publishCvFeedback, setPublishCvFeedback] = useState<FeedbackState>({ error: "", message: "" });
+  const [publishPostFeedback, setPublishPostFeedback] = useState<FeedbackState>({ error: "", message: "" });
+  // const [published, setPublished] = useState(false);
 
   const [loading, setLoading] = useState<LoadingState>({ generate: false, submit: false, parse: false });
 
-  const cvInputRef = useRef<HTMLInputElement>(null);
+  // const cvInputRef = useRef<HTMLInputElement>(null);
 
   // ── Derived ────────────────────────────────────────────────────────────────
-  const canPublishFree = !hasPublishedBefore;
-  const canPublishPaid = ratingPoints >= PUBLISH_COST;
-  const canPublish = canPublishFree || canPublishPaid;
-  const ratingsNeeded = Math.max(PUBLISH_COST - ratingPoints, 0);
-  const canUseCvParser = cvTokens >= CV_TOKEN_COST;
+  // const canPublishFree = !hasPublishedBefore;
+  // const canPublishPaid = ratingPoints >= PUBLISH_COST;
+  // const canPublish = canPublishFree || canPublishPaid;
+  // const ratingsNeeded = Math.max(PUBLISH_COST - ratingPoints, 0);
+  // const canUseCvParser = cvTokens >= CV_TOKEN_COST;
 
-  const canSubmit = useMemo(
-    () => profile.role.trim() && profile.criteria.every((c) => c.trim().length > 0),
-    [profile.role, profile.criteria],
+  const canSubmitPost = useMemo(
+    () => post.targetJob.trim() && post.criteria.every((c) => c.trim().length > 0),
+    [post.targetJob, post.criteria],
+  );
+
+  const canSubmitCv = useMemo(
+    () => cv.experiences.every((c) => {
+      if (!c.title) return false;
+      if (!c.company) return false;
+      if (!c.startDate) return false;
+      if (!c.endDate) return false;
+      if (!c.description) {
+        return false
+      } else {
+        return true
+      }
+    }) && cv.educations.every((c) => {
+      if (!c.degree) return false;
+      if (!c.institution) return false;
+      if (!c.startDate) return false;
+      if (!c.endDate) return false;
+      if (!c.gpa) return false;
+    }) && cv.skills.every((c) => c.trim().length > 0),
+    [cv.experiences, cv.educations, cv.skills],
   );
 
   // Sync selectedImage → profile photo preview
   useEffect(() => {
     if (!selectedImage) return;
     const url = URL.createObjectURL(selectedImage);
-    setProfile((prev) => ({ ...prev, imageUrl: url }));
+    setCv((prev) => ({ ...prev, imageUrl: url }));
     return () => URL.revokeObjectURL(url);
   }, [selectedImage]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleFieldChange = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => {
-    setProfile((prev) => ({ ...prev, [key]: value }));
+  const handleCvFieldChange = <K extends keyof CvData>(key: K, value: CvData[K]) => {
+    setCv((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleExperienceChange = (index: number, key: "role" | "company" | "meta", value: string) => {
-    setProfile((prev) => {
-      const next = [...prev.experience];
+  const handlePostFieldChange = <K extends keyof PostData>(key: K, value: PostData[K]) => {
+    setPost((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleExperienceChange = (index: number, key: "title" | "company" | "startDate" | "endDate" | "description", value: string) => {
+    setCv((prev) => {
+      const next = [...prev.experiences];
       next[index] = { ...next[index], [key]: value };
-      return { ...prev, experience: next };
+      return { ...prev, experiences: next };
     });
   };
 
-  const handleEducationChange = (index: number, key: "title" | "school" | "meta", value: string) => {
-    setProfile((prev) => {
-      const next = [...prev.education];
+  const handleEducationChange = (index: number, key: "degree" | "institution" | "startDate" | "endDate" | "gpa", value: string) => {
+    setCv((prev) => {
+      const next = [...prev.educations];
       next[index] = { ...next[index], [key]: value };
-      return { ...prev, education: next };
+      return { ...prev, educations: next };
     });
   };
 
-  const handleParseCV = async () => {
+  /* const handleParseCV = async () => {
     if (!cvFile) { setParseFeedback({ message: "", error: "Select a CV file first" }); return; }
     if (!canUseCvParser) { setParseFeedback({ message: "", error: "Not enough CV tokens" }); return; }
 
@@ -165,10 +190,10 @@ export default function EditProfilePage() {
     } finally {
       setLoading((p) => ({ ...p, parse: false }));
     }
-  };
+  }; */
 
   const handleGenerateCriteria = async () => {
-    if (!profile.role.trim()) {
+    if (!post.targetJob.trim()) {
       setCriteriaFeedback({ message: "", error: "Fill in your role first" });
       return;
     }
@@ -178,11 +203,11 @@ export default function EditProfilePage() {
       const res = await fetch("/api/posts/generate-criteria", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetJob: profile.role }),
+        body: JSON.stringify({ targetJob: post.targetJob }),
       });
       if (!res.ok) throw new Error("Generation failed");
       const data = (await res.json()) as { criteria?: string[] };
-      setProfile((prev) => ({ ...prev, criteria: data.criteria ?? ["", "", ""] }));
+      setCv((prev) => ({ ...prev, criteria: data.criteria ?? ["", "", ""] }));
       setCriteriaFeedback({ error: "", message: "Criteria generated" });
     } catch (err) {
       setCriteriaFeedback({ message: "", error: getErrorMessage(err) });
@@ -191,28 +216,90 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmitPost = async (e: SubmitEvent) => {
+    e.preventDefault();
+    if (!selectedImage && !post.image) {
+      setPublishPostFeedback({ message: "", error: "Please choose a profile photo" });
+      return;
+    }
+    setLoading((p) => ({ ...p, submit: true }));
+    setPublishPostFeedback({ error: "", message: "" });
+    try {
+      const criteria = post.criteria.map((item) => item.trim());
+      const formData = new FormData();
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+      formData.append("targetJob", post.targetJob.trim());
+      formData.append("criteria", JSON.stringify(criteria));
+
+      const hasExistingPost = Boolean(post.image);
+      const response = hasExistingPost
+        ? await api.put("/posts", formData)
+        : await api.post("/posts", formData);
+
+      const nextImage = response.data?.post?.image as string | undefined;
+      if (nextImage) {
+        setPost((prev) => ({ ...prev, image: nextImage }));
+        setSelectedImage(null);
+      }
+      // if (!res.ok) throw new Error("Publish failed");
+      // const data = (await res.json()) as { remainingQuota?: number };
+      // if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
+      // setHasPublishedBefore(true);
+      // setPublished(true);
+      setPublishPostFeedback({ error: "", message: "Published successfully" });
+    } catch (err) {
+      setPublishPostFeedback({ message: "", error: getApiErrorMessage(err) });
+    } finally {
+      setLoading((p) => ({ ...p, submit: false }));
+    }
+  };
+
+  const handleSubmitCv = async (e: SubmitEvent) => {
     e.preventDefault();
     setLoading((p) => ({ ...p, submit: true }));
-    setPublishFeedback({ error: "", message: "" });
+    setPublishCvFeedback({ error: "", message: "" });
     try {
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: profile.imageUrl,
-          targetJob: profile.role,
-          criteria: profile.criteria.map((c) => c.trim()),
-        }),
-      });
-      if (!res.ok) throw new Error("Publish failed");
-      const data = (await res.json()) as { remainingQuota?: number };
-      if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
-      setHasPublishedBefore(true);
-      setPublished(true);
-      setPublishFeedback({ error: "", message: "Published successfully" });
+      const toDateString = (value: Date | string) =>
+        value instanceof Date ? value.toISOString().slice(0, 10) : value;
+
+      const payload = {
+        experiences: cv.experiences.map((item) => ({
+          title: item.title,
+          company: item.company,
+          startDate: toDateString(item.startDate),
+          endDate: toDateString(item.endDate),
+          description: item.description,
+        })),
+        educations: cv.educations.map((item) => ({
+          degree: item.degree,
+          institution: item.institution,
+          startDate: toDateString(item.startDate),
+          endDate: toDateString(item.endDate),
+          gpa: item.gpa,
+        })),
+        skills: cv.skills.filter(Boolean),
+      };
+
+      try {
+        await api.patch("/cvs/edit", payload);
+      } catch (err) {
+        const message = getApiErrorMessage(err);
+        if (message !== "User CV not found!") {
+          throw err;
+        }
+        await api.post("/cvs/add", payload);
+      }
+      //TODO: Handle free first time profile setup
+      // if (!res.ok) throw new Error("Publish failed");
+      // const data = (await res.json()) as { remainingQuota?: number };
+      // if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
+      // setHasPublishedBefore(true);
+      // setPublished(true);
+      setPublishCvFeedback({ error: "", message: "Published successfully" });
     } catch (err) {
-      setPublishFeedback({ message: "", error: getErrorMessage(err) });
+      setPublishCvFeedback({ message: "", error: getApiErrorMessage(err) });
     } finally {
       setLoading((p) => ({ ...p, submit: false }));
     }
@@ -238,7 +325,7 @@ export default function EditProfilePage() {
       </header>
 
       {/* ── CV AI Parser ──────────────────────────────────────────────────────── */}
-      <GlassCard>
+      {/* <GlassCard>
         <SectionHead
           icon={<FileText size={13} />}
           label="CV AI Parser"
@@ -298,38 +385,55 @@ export default function EditProfilePage() {
             <Notice message={parseFeedback.error} />
           </div>
         )}
-      </GlassCard>
+      </GlassCard> */}
 
       {/* ── Profile Form (criteria embedded inside) ───────────────────────────── */}
-      <ProfileEditor
-        editor={profile}
+      <PostEditor
+        editor={post}
+        loading={loading}
+        canSubmit={canSubmitPost}
         isEditing
         selectedImage={selectedImage}
         onSelectImage={setSelectedImage}
-        onFieldChange={handleFieldChange}
-        onExperienceChange={handleExperienceChange}
-        onEducationChange={handleEducationChange}
-        onAddExperience={() =>
-          setProfile((prev) => ({ ...prev, experience: [...prev.experience, { role: "", company: "", meta: "" }] }))
-        }
-        onRemoveExperience={(i) =>
-          setProfile((prev) => ({ ...prev, experience: prev.experience.filter((_, idx) => idx !== i) }))
-        }
-        onAddEducation={() =>
-          setProfile((prev) => ({ ...prev, education: [...prev.education, { title: "", school: "", meta: "" }] }))
-        }
-        onRemoveEducation={(i) =>
-          setProfile((prev) => ({ ...prev, education: prev.education.filter((_, idx) => idx !== i) }))
-        }
+        onFieldChange={handlePostFieldChange}
         criteriaMode={criteriaMode}
         onCriteriaModeChange={setCriteriaMode}
         onGenerateCriteria={handleGenerateCriteria}
         generatingCriteria={loading.generate}
         criteriaFeedback={criteriaFeedback}
+        handleSubmitPost={handleSubmitPost}
+        publishPostFeedback={publishPostFeedback}
+      />
+
+      <CvEditor
+        editor={cv}
+        loading={loading}
+        canSubmit={canSubmitCv}
+        isEditing
+        onFieldChange={handleCvFieldChange}
+        onExperienceChange={handleExperienceChange}
+        onEducationChange={handleEducationChange}
+        onAddExperience={() => {
+
+          setCv((prev) => ({ ...prev, experiences: [...prev.experiences, { title: "", company: "", startDate: new Date(), endDate: new Date(), description: "" }] }))
+          console.log(cv)
+        }
+        }
+        onRemoveExperience={(i) =>
+          setCv((prev) => ({ ...prev, experiences: prev.experiences.filter((_, idx) => idx !== i) }))
+        }
+        onAddEducation={() =>
+          setCv((prev) => ({ ...prev, educations: [...prev.educations, { degree: "", institution: "", startDate: new Date(), endDate: new Date(), gpa: 0 }] }))
+        }
+        onRemoveEducation={(i) =>
+          setCv((prev) => ({ ...prev, education: prev.educations.filter((_, idx) => idx !== i) }))
+        }
+        handleSubmitCv={handleSubmitCv}
+        publishCvFeedback={publishCvFeedback}
       />
 
       {/* ── Publish ───────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-4xl border border-indigo-950 bg-indigo-950 p-7 text-white shadow-2xl shadow-indigo-900/25">
+      {/* <div className="relative overflow-hidden rounded-4xl border border-indigo-950 bg-indigo-950 p-7 text-white shadow-2xl shadow-indigo-900/25">
         <div className="pointer-events-none absolute right-0 top-0 p-6 opacity-5">
           {canPublish ? <Send size={110} /> : <Lock size={110} />}
         </div>
@@ -360,12 +464,11 @@ export default function EditProfilePage() {
 
           {canPublish ? (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Criteria preview */}
-              {profile.criteria.some((c) => c.trim()) && (
+              {post.criteria.some((c) => c.trim()) && (
                 <div>
                   <p className="mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Criteria</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {profile.criteria.map((c, i) => (
+                    {post.criteria.map((c, i) => (
                       <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-[10px] font-bold text-indigo-200">
                         {c || `—`}
                       </div>
@@ -440,7 +543,7 @@ export default function EditProfilePage() {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
     </div>
   );
