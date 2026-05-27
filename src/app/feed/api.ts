@@ -3,7 +3,7 @@ import type {
   FeedResponse,
   SubmitRatingPayload,
   SubmitRatingResponse,
-} from "./types";
+} from "../../types";
 
 export { getCurrentUser } from "@/api/user";
 
@@ -28,7 +28,9 @@ export async function submitRating(payload: SubmitRatingPayload) {
 
 export async function getMyTargetJob(): Promise<string | null> {
   try {
-    const response = await api.get<{ post: { targetJob: string } }>("/posts/my-post");
+    const response = await api.get<{ post: { targetJob: string } }>(
+      "/posts/my-post",
+    );
     return response.data.post.targetJob;
   } catch {
     return null;

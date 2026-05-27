@@ -1,6 +1,6 @@
 "use client";
 
-import type { FeedPost, FeedRatingCriterion } from "../types";
+import type { FeedPost, FeedRatingCriterion } from "../../../types";
 
 export type RadarCategory = "social" | "professional";
 
@@ -27,7 +27,8 @@ function normalizeRadarCriteria(
     const criterion = criteria[index];
 
     return {
-      label: criterion?.label ?? fallbackLabels[index] ?? `Criteria ${index + 1}`,
+      label:
+        criterion?.label ?? fallbackLabels[index] ?? `Criteria ${index + 1}`,
       average: criterion?.average ?? 0,
       maxScore: criterion?.maxScore ?? 3,
     };
@@ -93,8 +94,7 @@ export default function PerformanceRadar({
       stroke: "#818cf8",
       fill: "url(#professionalGradient)",
       text: "text-indigo-300",
-      activeClass:
-        "text-indigo-300 bg-indigo-400/10 ring-1 ring-indigo-400/30",
+      activeClass: "text-indigo-300 bg-indigo-400/10 ring-1 ring-indigo-400/30",
     },
   };
   const active = radarData[activeRadar];
@@ -192,7 +192,13 @@ export default function PerformanceRadar({
           })}
 
           <defs>
-            <linearGradient id="socialGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient
+              id="socialGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
               <stop offset="0%" stopColor="rgba(6,182,212,0.24)" />
               <stop offset="100%" stopColor="rgba(6,182,212,0.04)" />
             </linearGradient>
@@ -233,7 +239,9 @@ export default function PerformanceRadar({
               type="button"
               onClick={() => onActiveRadarChange(category)}
               className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest transition-all duration-200 ${
-                isActive ? item.activeClass : "text-indigo-400/60 hover:text-indigo-200"
+                isActive
+                  ? item.activeClass
+                  : "text-indigo-400/60 hover:text-indigo-200"
               }`}
             >
               <span
