@@ -120,24 +120,6 @@ function LoginContent() {
             "Sign in"
           )}
         </button>
-
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">
-              Or continue with
-            </span>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
-          <div className="flex justify-center rounded-2xl border border-gray-100 bg-white p-2 shadow-sm">
-            <button
-              type="button"
-              className="flex items-center gap-3 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-700"
-            >
-              G<span>Sign in with Google</span>
-            </button>
-          </div>
-        </div>
       </form>
     </AuthSplitLayout>
   );
