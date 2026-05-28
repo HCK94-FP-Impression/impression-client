@@ -417,6 +417,7 @@ export default function EditProfilePage() {
       // setPublished(true);
       setPublishPostFeedback({ error: "", message: "Published successfully" });
       window.dispatchEvent(new Event("quota-updated"));
+      setAlreadyAnalyzed(false);
     } catch (err) {
       setPublishPostFeedback({ message: "", error: getApiErrorMessage(err) });
     } finally {
@@ -465,6 +466,7 @@ export default function EditProfilePage() {
       // setPublished(true);
       setPublishCvFeedback({ error: "", message: "Published successfully" });
       window.dispatchEvent(new Event("quota-updated"));
+      setAlreadyAnalyzed(false);
     } catch (err) {
       setPublishCvFeedback({ message: "", error: getApiErrorMessage(err) });
     } finally {
