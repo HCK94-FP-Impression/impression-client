@@ -22,7 +22,10 @@ export default function DisqusEmbed({ identifier, title }: Props) {
   useEffect(() => {
     if (!SHORTNAME) return;
 
-    function config(this: { page: { identifier: string; title: string } }) {
+    function config(this: {
+      page: { identifier: string; title: string; url: string };
+    }) {
+      this.page.url = window.location.href;
       this.page.identifier = identifier;
       this.page.title = title;
     }

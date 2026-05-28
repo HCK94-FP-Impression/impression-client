@@ -29,13 +29,17 @@ export default function Navbar() {
     const authenticated = hasClientAuthSession();
     setIsAuthenticated(authenticated);
     if (!authenticated) return;
-    getCurrentUser().then(setUser).catch(() => {});
+    getCurrentUser()
+      .then(setUser)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     function refreshUser() {
       if (!hasClientAuthSession()) return;
-      getCurrentUser().then(setUser).catch(() => {});
+      getCurrentUser()
+        .then(setUser)
+        .catch(() => {});
     }
     window.addEventListener("quota-updated", refreshUser);
     return () => window.removeEventListener("quota-updated", refreshUser);
@@ -105,7 +109,7 @@ export default function Navbar() {
                 href="/comunity"
                 className="flex items-center gap-2 rounded-xl bg-indigo-950 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-900/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-900"
               >
-                Comunity
+                Community
                 <ArrowUpRight size={14} />
               </Link>
 
