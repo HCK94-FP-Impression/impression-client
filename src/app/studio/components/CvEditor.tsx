@@ -13,26 +13,26 @@ import { FeedbackState, LoadingState } from "../page";
 import { SubmitEvent, useState, type KeyboardEvent } from "react";
 
 export type CvData = {
-  experiences: Experience[],
-  educations: Education[],
-  skills: string[]
-}
+  experiences: Experience[];
+  educations: Education[];
+  skills: string[];
+};
 
 export type Experience = {
-  title: string,
-  company: string,
-  startDate: Date,
-  endDate: Date,
-  description: string
-}
+  title: string;
+  company: string;
+  startDate: string | null;
+  endDate: string | null;
+  description: string;
+};
 
 export type Education = {
-  degree: string,
-  institution: string,
-  startDate: Date,
-  endDate: Date,
-  gpa: number
-}
+  degree: string;
+  institution: string;
+  startDate: string | null;
+  endDate: string | null;
+  gpa: number | null;
+};
 
 type CvEditorProps = {
   loading: LoadingState;
@@ -139,7 +139,7 @@ export default function CvEditor({
           <SectionLabel icon={<Layers size={13} />} label="Curriculum Vitae" />
 
           {/* ── Experience ── */}
-          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+          <div className="flex items-center justify-between border-b border-gray-100 ">
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-500">
                 <BriefcaseBusiness size={13} />
@@ -155,7 +155,7 @@ export default function CvEditor({
               <Plus size={11} /> Add
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="mt-4 space-y-4">
             {editor.experiences.map((item, index) => (
               <div key={`exp-${index}`} className="relative rounded-3xl border border-gray-100 bg-white/80 p-5 shadow-sm transition hover:border-indigo-100 hover:shadow-md">
                 <div className="mb-4 flex items-center justify-between">
@@ -177,7 +177,9 @@ export default function CvEditor({
                 <div className="grid gap-2.5">
                   <input value={item.title} onChange={(e) => onExperienceChange(index, "title", e.target.value)} disabled={!isEditing} placeholder="Job Title / Role" className={subInputClass} />
                   <input value={item.company} onChange={(e) => onExperienceChange(index, "company", e.target.value)} disabled={!isEditing} placeholder="Company Name" className={subInputClass} />
-                  <input value={item.startDate.toISOString().slice(0, 10)} onChange={(e) => onExperienceChange(index, "startDate", e.target.value)} disabled={!isEditing} placeholder="Duration (e.g. 2022 – Present)" className={subInputClass} />
+                  <input type="date" value={item.startDate ?? ""} onChange={(e) => onExperienceChange(index, "startDate", e.target.value)} disabled={!isEditing} className={subInputClass} />
+                  <input type="date" value={item.endDate ?? ""} onChange={(e) => onExperienceChange(index, "endDate", e.target.value)} disabled={!isEditing} className={subInputClass} />
+                  <textarea value={item.description} onChange={(e) => onExperienceChange(index, "description", e.target.value)} disabled={!isEditing} placeholder="Describe your impact" className={`${subInputClass} min-h-22.5 resize-y`} />
                 </div>
               </div>
             ))}
@@ -191,7 +193,7 @@ export default function CvEditor({
         </div>
 
         {/* ── Education ── */}
-        <div className="space-y-4">
+        <div className="mt-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-500">
@@ -230,7 +232,9 @@ export default function CvEditor({
                 <div className="grid gap-2.5">
                   <input value={item.degree} onChange={(e) => onEducationChange(index, "degree", e.target.value)} disabled={!isEditing} placeholder="Degree / Certificate" className={subInputClass} />
                   <input value={item.institution} onChange={(e) => onEducationChange(index, "institution", e.target.value)} disabled={!isEditing} placeholder="Institution / School" className={subInputClass} />
-                  <input value={item.startDate.toISOString().slice(0, 10)} onChange={(e) => onEducationChange(index, "startDate", e.target.value)} disabled={!isEditing} placeholder="Year (e.g. 2019 – 2023)" className={subInputClass} />
+                  <input type="date" value={item.startDate ?? ""} onChange={(e) => onEducationChange(index, "startDate", e.target.value)} disabled={!isEditing} className={subInputClass} />
+                  <input type="date" value={item.endDate ?? ""} onChange={(e) => onEducationChange(index, "endDate", e.target.value)} disabled={!isEditing} className={subInputClass} />
+                  <input type="number" value={item.gpa ?? ""} onChange={(e) => onEducationChange(index, "gpa", e.target.value)} disabled={!isEditing} placeholder="GPA" className={subInputClass} step="0.01" min="0" max="4" />
                 </div>
               </div>
             ))}
@@ -245,7 +249,7 @@ export default function CvEditor({
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Skills (comma separated)</label>
+            <label className="mt-4 mb-2 block text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Skills (comma separated)</label>
             <input
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
