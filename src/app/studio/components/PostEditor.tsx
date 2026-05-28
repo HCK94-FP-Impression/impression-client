@@ -12,16 +12,19 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { FeedbackState, LoadingState } from "../page";
+import JobDropdown from "./JobDropdown";
 
 export type PostData = {
-  image: string,
-  targetJob: string,
-  criteria: [string, string, string]
-}
+  image: string;
+  targetJob: string;
+  criteria: [string, string, string];
+  aiScore?: number | null;
+  aiInsight?: string | null;
+};
 
 type PostEditorProps = {
-  loading: LoadingState,
-  canSubmit: boolean | "",
+  loading: LoadingState;
+  canSubmit: boolean | "";
   editor: PostData;
   isEditing: boolean;
   selectedImage: File | null;
@@ -32,31 +35,48 @@ type PostEditorProps = {
   onGenerateCriteria: () => void;
   generatingCriteria: boolean;
   criteriaFeedback?: { error: string; message: string };
-  handleSubmitPost: (e: SubmitEvent) => Promise<void>
-  publishPostFeedback: FeedbackState
+  handleSubmitPost: (e: SubmitEvent) => Promise<void>;
+  publishPostFeedback: FeedbackState;
 };
 
 const inputClass =
   "w-full rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 text-sm font-semibold text-gray-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-300";
 
-function SectionLabel({ icon, label }: { icon: React.ReactNode; label: string }) {
+function SectionLabel({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-2.5 border-b border-gray-100 pb-4">
       <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-500">
         {icon}
       </div>
-      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">{label}</span>
+      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+        {label}
+      </span>
     </div>
   );
 }
 
-const Notice = ({ message, tone = "error" }: { message: string; tone?: "error" | "success" }) => {
+const Notice = ({
+  message,
+  tone = "error",
+}: {
+  message: string;
+  tone?: "error" | "success";
+}) => {
   if (!message) return null;
-  const cls = tone === "success"
-    ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-    : "border-rose-100 bg-rose-50 text-rose-600";
+  const cls =
+    tone === "success"
+      ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+      : "border-rose-100 bg-rose-50 text-rose-600";
   return (
-    <div className={`rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${cls}`}>
+    <div
+      className={`rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] ${cls}`}
+    >
       {message}
     </div>
   );
@@ -76,14 +96,15 @@ export default function PostEditor({
   generatingCriteria,
   criteriaFeedback,
   handleSubmitPost,
-  publishPostFeedback
+  publishPostFeedback,
 }: PostEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imagePreviewUrl = selectedImage ? URL.createObjectURL(selectedImage) : null;
+  const imagePreviewUrl = selectedImage
+    ? URL.createObjectURL(selectedImage)
+    : null;
 
   return (
-    <section className="space-y-8 rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl">
-
+    <section className="overflow-visible space-y-8 rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5">
       {/* ── Basic Info ── */}
       <form onSubmit={handleSubmitPost}>
         <div className="space-y-4">
@@ -91,15 +112,26 @@ export default function PostEditor({
 
           {/* Photo */}
           <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Photo</p>
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+              Photo
+            </p>
             <div className="flex items-center gap-4">
               <div
                 onClick={() => isEditing && fileInputRef.current?.click()}
-                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all ${isEditing ? "cursor-pointer border-dashed border-gray-300 hover:border-indigo-400" : "border-gray-200"
-                  } bg-gray-50`}
+                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all ${
+                  isEditing
+                    ? "cursor-pointer border-dashed border-gray-300 hover:border-indigo-400"
+                    : "border-gray-200"
+                } bg-gray-50`}
               >
                 {imagePreviewUrl || editor.image ? (
-                  <Image src={imagePreviewUrl ?? editor.image} alt="Profile preview" className="h-full w-full object-cover" width={500} height={500} />
+                  <Image
+                    src={imagePreviewUrl ?? editor.image}
+                    alt="Profile preview"
+                    className="h-full w-full object-cover"
+                    width={500}
+                    height={500}
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <Camera size={20} className="text-gray-300" />
@@ -116,7 +148,9 @@ export default function PostEditor({
                   <Camera size={12} />
                   {selectedImage ? selectedImage.name : "Choose Photo"}
                 </button>
-                <p className="mt-1.5 text-[9px] font-bold text-gray-400">PNG or JPG — max 5 MB</p>
+                <p className="mt-1.5 text-[9px] font-bold text-gray-400">
+                  PNG or JPG — max 5 MB
+                </p>
               </div>
               <input
                 ref={fileInputRef}
@@ -132,13 +166,13 @@ export default function PostEditor({
           {/* Target Job + embedded Criteria Setup */}
           <div className="space-y-3">
             <div>
-              <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Target Job</label>
-              <input
+              <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+                Target Job
+              </label>
+              <JobDropdown
                 value={editor.targetJob}
-                onChange={(e) => onFieldChange("targetJob", e.target.value)}
+                onChange={(val) => onFieldChange("targetJob", val)}
                 disabled={!isEditing}
-                placeholder="e.g. Senior Frontend Engineer"
-                className={inputClass}
               />
             </div>
 
@@ -147,7 +181,9 @@ export default function PostEditor({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target size={11} className="text-indigo-400" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-400">Evaluation Criteria</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-400">
+                    Evaluation Criteria
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-0.5">
                   {(["ai", "manual"] as const).map((mode) => (
@@ -156,10 +192,17 @@ export default function PostEditor({
                       type="button"
                       onClick={() => onCriteriaModeChange(mode)}
                       disabled={!isEditing}
-                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all ${criteriaMode === mode ? "bg-indigo-950 text-white shadow-sm" : "text-gray-400 hover:text-gray-600"
-                        }`}
+                      className={`flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        criteriaMode === mode
+                          ? "bg-indigo-950 text-white shadow-sm"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
                     >
-                      {mode === "ai" ? <WandSparkles size={8} /> : <PencilLine size={8} />}
+                      {mode === "ai" ? (
+                        <WandSparkles size={8} />
+                      ) : (
+                        <PencilLine size={8} />
+                      )}
                       {mode === "ai" ? "AI" : "Manual"}
                     </button>
                   ))}
@@ -171,19 +214,31 @@ export default function PostEditor({
                   <button
                     type="button"
                     onClick={onGenerateCriteria}
-                    disabled={generatingCriteria || !editor.targetJob.trim() || !isEditing}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-950 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-sm shadow-indigo-900/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:translate-y-0 disabled:opacity-40"
+                    disabled={
+                      generatingCriteria ||
+                      !editor.targetJob.trim() ||
+                      !isEditing
+                    }
+                    className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl bg-indigo-950 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-sm shadow-indigo-900/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:translate-y-0 disabled:opacity-40"
                   >
                     {generatingCriteria ? (
-                      <><Sparkles size={11} className="animate-pulse" /> Generating...</>
+                      <>
+                        <Sparkles size={11} className="animate-pulse" />{" "}
+                        Generating...
+                      </>
                     ) : (
-                      <><WandSparkles size={11} /> Generate from Role</>
+                      <>
+                        <WandSparkles size={11} /> Generate from Role
+                      </>
                     )}
                   </button>
                   {editor.criteria.some((c) => c.trim()) && (
                     <div className="grid grid-cols-3 gap-2">
                       {editor.criteria.map((item, i) => (
-                        <div key={i} className="rounded-xl border border-indigo-100 bg-white px-3 py-2.5 text-center text-[10px] font-bold text-indigo-700 shadow-sm">
+                        <div
+                          key={i}
+                          className="rounded-xl border border-indigo-100 bg-white px-3 py-2.5 text-center text-[10px] font-bold text-indigo-700 shadow-sm"
+                        >
                           {item || `Criterion ${i + 1}`}
                         </div>
                       ))}
@@ -197,8 +252,12 @@ export default function PostEditor({
                       key={i}
                       value={item}
                       onChange={(e) => {
-                        const next = [...editor.criteria] as [string, string, string];
-                        next[i] = e.target.value
+                        const next = [...editor.criteria] as [
+                          string,
+                          string,
+                          string,
+                        ];
+                        next[i] = e.target.value;
                         onFieldChange("criteria", next);
                       }}
                       disabled={!isEditing}
@@ -232,7 +291,7 @@ export default function PostEditor({
           <button
             type="submit"
             disabled={loading.submit || !canSubmit}
-            className="w-full rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50 disabled:translate-y-0 disabled:opacity-50"
+            className="w-full cursor-pointer rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50 disabled:translate-y-0 disabled:opacity-50"
           >
             {loading.submit ? (
               <span className="flex items-center justify-center gap-2">
