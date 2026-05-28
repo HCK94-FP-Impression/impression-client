@@ -133,15 +133,12 @@ export default function EditProfilePage() {
         if (!c.title) return false;
         if (!c.company) return false;
         if (!c.startDate) return false;
-        if (!c.endDate) return false;
-        if (!c.description?.trim()) return false;
         return true;
       }) &&
       cv.educations.every((c) => {
         if (!c.degree) return false;
         if (!c.institution) return false;
         if (!c.startDate) return false;
-        if (!c.endDate) return false;
         if (c.gpa === null || Number.isNaN(c.gpa)) return false;
         return true;
       }) &&
@@ -159,6 +156,8 @@ export default function EditProfilePage() {
 
   const normalizeDate = (value?: string | Date | null) => {
     if (!value) return null;
+    if (typeof value === "string" && value.toLowerCase() === "present")
+      return "Present";
     const parsed = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(parsed.getTime())) return null;
     return parsed.toISOString().slice(0, 10);
