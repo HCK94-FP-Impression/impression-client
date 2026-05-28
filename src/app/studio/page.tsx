@@ -3,22 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SubmitEvent } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  // ArrowRight,
-  // Coins,
-  // FileText,
-  // Lock,
-  // Send,
-  // Sparkles,
-  // WandSparkles,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import CvEditor, { CvData } from "./components/CvEditor";
 import PostEditor, { PostData } from "./components/PostEditor";
 import { api, getApiErrorMessage } from "@/constants/constants";
 import AnalyzeSection from "./components/AnalyzeSection";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type FeedbackState = { error: string; message: string };
 export type LoadingState = {
@@ -27,76 +16,32 @@ export type LoadingState = {
   parse: boolean;
 };
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-/* const PUBLISH_COST = 5;   // rating points needed to republish
-const CV_TOKEN_COST = 3;  // CV tokens needed per parse (separate pool) */
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-/* const GlassCard = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
-  <div className={`rounded-4xl border border-white/60 bg-white/70 p-7 shadow-xl shadow-slate-900/5 backdrop-blur-2xl ${className}`}>
-    {children}
-  </div>
-);
-
-const SectionHead = ({ icon, label, aside }: { icon: ReactNode; label: string; aside?: ReactNode }) => (
-  <div className="mb-5 flex items-center justify-between">
-    <div className="flex items-center gap-2.5">
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-500">
-        {icon}
-      </div>
-      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">{label}</span>
-    </div>
-    {aside}
-  </div>
-);
-
-const TokenBadge = ({ tokens, cost, label }: { tokens: number; cost: number; label: string }) => (
-  <div className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
-    tokens >= cost ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-rose-100 bg-rose-50 text-rose-500"
-  }`}>
-    <Coins size={9} /> {tokens} {label}
-  </div>
-); */
-
-// ── Page ─────────────────────────────────────────────────────────────────────
-
 export default function EditProfilePage() {
-  // Profile data — live, no explicit save needed
   const [cv, setCv] = useState<CvData>({
     experiences: [],
     educations: [],
     skills: [],
   });
+  const [initialCv, setInitialCv] = useState<CvData | null>(null);
 
   const [post, setPost] = useState<PostData>({
     image: "",
     targetJob: "",
     criteria: ["", "", ""],
   });
+  const [initialPost, setInitialPost] = useState<PostData | null>(null);
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [hasPost, setHasPost] = useState<boolean | null>(null);
   const [hasCv, setHasCv] = useState<boolean | null>(null);
   const [alreadyAnalyzed, setAlreadyAnalyzed] = useState<boolean>(false);
 
-  // Token pools
-  // const [ratingPoints, setRatingPoints] = useState(0);
-  // const [cvTokens, setCvTokens] = useState(CV_TOKEN_COST);   // new users: 1 free parse
-  // const [hasPublishedBefore, setHasPublishedBefore] = useState(false);
-
-  // CV Parser
-  // const [cvFile, setCvFile] = useState<File | null>(null);
-  // const [parseFeedback, setParseFeedback] = useState<FeedbackState>({ error: "", message: "" });
-
-  // Criteria
   const [criteriaMode, setCriteriaMode] = useState<"ai" | "manual">("ai");
   const [criteriaFeedback, setCriteriaFeedback] = useState<FeedbackState>({
     error: "",
     message: "",
   });
 
-  // Publish
   const [publishCvFeedback, setPublishCvFeedback] = useState<FeedbackState>({
     error: "",
     message: "",
@@ -104,7 +49,6 @@ export default function EditProfilePage() {
   const [publishPostFeedback, setPublishPostFeedback] = useState<FeedbackState>(
     { error: "", message: "" },
   );
-  // const [published, setPublished] = useState(false);
 
   const [loading, setLoading] = useState<LoadingState>({
     generate: false,
@@ -112,23 +56,33 @@ export default function EditProfilePage() {
     parse: false,
   });
 
-  // const cvInputRef = useRef<HTMLInputElement>(null);
-
   // ── Derived ────────────────────────────────────────────────────────────────
-  // const canPublishFree = !hasPublishedBefore;
-  // const canPublishPaid = ratingPoints >= PUBLISH_COST;
-  // const canPublish = canPublishFree || canPublishPaid;
-  // const ratingsNeeded = Math.max(PUBLISH_COST - ratingPoints, 0);
-  // const canUseCvParser = cvTokens >= CV_TOKEN_COST;
+
+  const hasPostChanges = useMemo(() => {
+    if (!initialPost) return true;
+    return (
+      post.targetJob !== initialPost.targetJob ||
+      JSON.stringify(post.criteria) !== JSON.stringify(initialPost.criteria) ||
+      selectedImage !== null
+    );
+  }, [post, initialPost, selectedImage]);
+
+  const hasCvChanges = useMemo(() => {
+    if (!initialCv) return true;
+    return JSON.stringify(cv) !== JSON.stringify(initialCv);
+  }, [cv, initialCv]);
 
   const canSubmitPost = useMemo(
     () =>
-      post.targetJob.trim() && post.criteria.every((c) => c.trim().length > 0),
-    [post.targetJob, post.criteria],
+      hasPostChanges &&
+      !!post.targetJob.trim() &&
+      post.criteria.every((c) => c.trim().length > 0),
+    [post.targetJob, post.criteria, hasPostChanges],
   );
 
   const canSubmitCv = useMemo(
     () =>
+      hasCvChanges &&
       cv.experiences.every((c) => {
         if (!c.title) return false;
         if (!c.company) return false;
@@ -143,7 +97,7 @@ export default function EditProfilePage() {
         return true;
       }) &&
       cv.skills.every((c) => c.trim().length > 0),
-    [cv.experiences, cv.educations, cv.skills],
+    [cv, hasCvChanges],
   );
 
   const isFirstTime = hasPost === false && hasCv === false;
@@ -206,13 +160,15 @@ export default function EditProfilePage() {
 
       if (postResult.status === "fulfilled" && postResult.value.data?.post) {
         const postData = postResult.value.data.post;
-        setPost({
+        const normalizedPost: PostData = {
           image: postData.image ?? "",
           targetJob: postData.targetJob ?? "",
           criteria: normalizeCriteria(postData.criteria),
-          aiScore: postData.aiScore ?? null, // tambah
-          aiInsight: postData.aiInsight ?? null, // tambah
-        });
+          aiScore: postData.aiScore ?? null,
+          aiInsight: postData.aiInsight ?? null,
+        };
+        setPost(normalizedPost);
+        setInitialPost(normalizedPost);
         setHasPost(true);
         setAlreadyAnalyzed(
           postData.aiScore !== null && postData.aiScore !== undefined,
@@ -243,11 +199,13 @@ export default function EditProfilePage() {
           educations.length ||
           (cvData.skills?.length ?? 0) > 0
         ) {
-          setCv({
+          const normalizedCv: CvData = {
             experiences,
             educations,
             skills: cvData.skills ?? [],
-          });
+          };
+          setCv(normalizedCv);
+          setInitialCv(normalizedCv);
           setHasCv(true);
         } else {
           setHasCv(false);
@@ -264,7 +222,6 @@ export default function EditProfilePage() {
     };
   }, []);
 
-  // Sync selectedImage → profile photo preview
   useEffect(() => {
     if (!selectedImage) return;
     const url = URL.createObjectURL(selectedImage);
@@ -273,6 +230,7 @@ export default function EditProfilePage() {
   }, [selectedImage]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
+
   const handleCvFieldChange = <K extends keyof CvData>(
     key: K,
     value: CvData[K],
@@ -326,31 +284,6 @@ export default function EditProfilePage() {
     });
   };
 
-  /* const handleParseCV = async () => {
-    if (!cvFile) { setParseFeedback({ message: "", error: "Select a CV file first" }); return; }
-    if (!canUseCvParser) { setParseFeedback({ message: "", error: "Not enough CV tokens" }); return; }
-
-    setLoading((p) => ({ ...p, parse: true }));
-    setParseFeedback({ error: "", message: "" });
-    const formData = new FormData();
-    formData.append("file", cvFile);
-    try {
-      const res = await fetch("/api/posts/parse-cv", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("CV parsing failed");
-      const data = (await res.json()) as Partial<ProfileData>;
-      const fields: (keyof ProfileData)[] = ["name", "role", "location", "summary", "skills", "criteria", "experience", "education"];
-      for (const key of fields) {
-        if (data[key] !== undefined) handleFieldChange(key, data[key] as ProfileData[typeof key]);
-      }
-      setCvTokens((t) => t - CV_TOKEN_COST);
-      setParseFeedback({ error: "", message: "CV parsed — fields updated" });
-    } catch (err) {
-      setParseFeedback({ message: "", error: getErrorMessage(err, "CV parsing failed") });
-    } finally {
-      setLoading((p) => ({ ...p, parse: false }));
-    }
-  }; */
-
   const handleGenerateCriteria = async () => {
     if (!post.targetJob.trim()) {
       setCriteriaFeedback({ message: "", error: "Fill in your role first" });
@@ -361,9 +294,7 @@ export default function EditProfilePage() {
     try {
       const response = await api.post<{ criteria?: string[] }>(
         "/posts/generate-criteria",
-        {
-          targetJob: post.targetJob.trim(),
-        },
+        { targetJob: post.targetJob.trim() },
       );
       setPost((prev) => ({
         ...prev,
@@ -384,7 +315,6 @@ export default function EditProfilePage() {
         message: "",
         error: "Please choose a profile photo",
       });
-
       return;
     }
     setLoading((p) => ({ ...p, submit: true }));
@@ -392,9 +322,7 @@ export default function EditProfilePage() {
     try {
       const criteria = post.criteria.map((item) => item.trim());
       const formData = new FormData();
-      if (selectedImage) {
-        formData.append("image", selectedImage);
-      }
+      if (selectedImage) formData.append("image", selectedImage);
       formData.append("targetJob", post.targetJob.trim());
       formData.append("criteria", JSON.stringify(criteria));
 
@@ -404,16 +332,16 @@ export default function EditProfilePage() {
         : await api.post("/posts", formData);
 
       const nextImage = response.data?.post?.image as string | undefined;
+      const updatedPost: PostData = {
+        ...post,
+        image: nextImage ?? post.image,
+      };
       if (nextImage) {
-        setPost((prev) => ({ ...prev, image: nextImage }));
+        setPost(updatedPost);
         setSelectedImage(null);
       }
+      setInitialPost(updatedPost);
       if (!isEditingPost) setHasPost(true);
-      // if (!res.ok) throw new Error("Publish failed");
-      // const data = (await res.json()) as { remainingQuota?: number };
-      // if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
-      // setHasPublishedBefore(true);
-      // setPublished(true);
       setPublishPostFeedback({ error: "", message: "Published successfully" });
       window.dispatchEvent(new Event("quota-updated"));
       setAlreadyAnalyzed(false);
@@ -457,12 +385,7 @@ export default function EditProfilePage() {
         await api.post("/cvs/add", payload);
         setHasCv(true);
       }
-      //TODO: Handle free first time profile setup
-      // if (!res.ok) throw new Error("Publish failed");
-      // const data = (await res.json()) as { remainingQuota?: number };
-      // if (data.remainingQuota !== undefined) setRatingPoints(data.remainingQuota);
-      // setHasPublishedBefore(true);
-      // setPublished(true);
+      setInitialCv({ ...cv });
       setPublishCvFeedback({ error: "", message: "Published successfully" });
       window.dispatchEvent(new Event("quota-updated"));
       setAlreadyAnalyzed(false);
@@ -476,7 +399,6 @@ export default function EditProfilePage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 py-4">
-      {/* Header */}
       <header className="flex items-center justify-between gap-4">
         <div>
           <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
@@ -498,70 +420,6 @@ export default function EditProfilePage() {
         </Link>
       </header>
 
-      {/* ── CV AI Parser ──────────────────────────────────────────────────────── */}
-      {/* <GlassCard>
-        <SectionHead
-          icon={<FileText size={13} />}
-          label="CV AI Parser"
-          aside={<TokenBadge tokens={cvTokens} cost={CV_TOKEN_COST} label="CV tokens" />}
-        />
-        <p className="mb-5 text-sm font-semibold leading-relaxed text-gray-400">
-          Upload your CV and AI will auto-fill the form fields below.{" "}
-          <span className="font-bold text-gray-500">Costs {CV_TOKEN_COST} CV tokens per parse.</span>
-        </p>
-
-        <div
-          onClick={() => canUseCvParser && cvInputRef.current?.click()}
-          className={`group mb-4 flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-8 py-7 text-center transition-all ${
-            canUseCvParser
-              ? "cursor-pointer border-gray-200 bg-gray-50/60 hover:border-indigo-400 hover:bg-indigo-50/40"
-              : "cursor-not-allowed border-gray-100 bg-gray-50/30 opacity-40"
-          }`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-100 bg-white shadow-sm transition-transform group-hover:scale-105">
-            <FileText size={18} className="text-indigo-400" />
-          </div>
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">
-              {cvFile ? cvFile.name : "Drop CV or click to browse"}
-            </p>
-            <p className="mt-1 text-[9px] font-bold text-gray-400">PDF, DOC, DOCX — max 10 MB</p>
-          </div>
-          <input
-            ref={cvInputRef}
-            type="file"
-            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
-            className="hidden"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleParseCV}
-          disabled={loading.parse || !cvFile || !canUseCvParser}
-          className="w-full rounded-xl bg-indigo-950 px-5 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-900/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-800 disabled:translate-y-0 disabled:opacity-40"
-        >
-          {loading.parse ? (
-            <span className="flex items-center justify-center gap-2">
-              <Sparkles size={13} className="animate-pulse" /> Parsing...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <WandSparkles size={13} /> Parse with AI — {CV_TOKEN_COST} tokens
-            </span>
-          )}
-        </button>
-
-        {(parseFeedback.message || parseFeedback.error) && (
-          <div className="mt-4 space-y-2">
-            <Notice message={parseFeedback.message} tone="success" />
-            <Notice message={parseFeedback.error} />
-          </div>
-        )}
-      </GlassCard> */}
-
-      {/* ── Profile Form (criteria embedded inside) ───────────────────────────── */}
       <PostEditor
         editor={post}
         loading={loading}
@@ -632,6 +490,7 @@ export default function EditProfilePage() {
         handleSubmitCv={handleSubmitCv}
         publishCvFeedback={publishCvFeedback}
       />
+
       {hasPost && hasCv && (
         <AnalyzeSection
           alreadyAnalyzed={alreadyAnalyzed}
@@ -643,119 +502,6 @@ export default function EditProfilePage() {
           onAnalyzed={() => setAlreadyAnalyzed(true)}
         />
       )}
-
-      {/* ── Publish ───────────────────────────────────────────────────────────── */}
-      {/* <div className="relative overflow-hidden rounded-4xl border border-indigo-950 bg-indigo-950 p-7 text-white shadow-2xl shadow-indigo-900/25">
-        <div className="pointer-events-none absolute right-0 top-0 p-6 opacity-5">
-          {canPublish ? <Send size={110} /> : <Lock size={110} />}
-        </div>
-
-        <div className="relative z-10">
-          <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Publish</p>
-              <h2 className="text-xl font-black tracking-tight text-white">Post to Feed</h2>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2 text-[9px] font-black uppercase">
-              {canPublishFree ? (
-                <span className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-emerald-400">
-                  1 free post
-                </span>
-              ) : (
-                <>
-                  <span className="rounded-lg border border-indigo-700 bg-indigo-900/60 px-2.5 py-1 text-indigo-300">
-                    {ratingPoints} pts
-                  </span>
-                  <span className="rounded-lg border border-rose-900/40 bg-rose-900/20 px-2.5 py-1 text-rose-400">
-                    Cost {PUBLISH_COST}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {canPublish ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {post.criteria.some((c) => c.trim()) && (
-                <div>
-                  <p className="mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Criteria</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {post.criteria.map((c, i) => (
-                      <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-[10px] font-bold text-indigo-200">
-                        {c || `—`}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(publishFeedback.message || publishFeedback.error) && (
-                <div className="space-y-2">
-                  <Notice message={publishFeedback.message} tone="success" />
-                  <Notice message={publishFeedback.error} />
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading.submit || !canSubmit}
-                className="w-full rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50 disabled:translate-y-0 disabled:opacity-50"
-              >
-                {loading.submit ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Sparkles size={13} className="animate-pulse" /> Publishing...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <Send size={13} /> Publish Profile
-                  </span>
-                )}
-              </button>
-
-              {!canSubmit && (
-                <p className="text-center text-[9px] font-bold text-indigo-400/60">
-                  Fill in your role and set 3 criteria to publish
-                </p>
-              )}
-
-              {published && (
-                <Link
-                  href="/profile"
-                  className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-300 transition-colors hover:text-white"
-                >
-                  View Profile <ArrowRight size={12} />
-                </Link>
-              )}
-            </form>
-          ) : (
-            <div className="space-y-5">
-              <div>
-                <div className="mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
-                  <span className="text-indigo-400">Ratings earned</span>
-                  <span className="text-white">{ratingPoints} / {PUBLISH_COST}</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-indigo-400 transition-all duration-700"
-                    style={{ width: `${Math.min((ratingPoints / PUBLISH_COST) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs font-bold text-indigo-200">
-                  Rate <span className="font-black text-white">{ratingsNeeded}</span> more profile{ratingsNeeded !== 1 ? "s" : ""} to unlock publishing.
-                </p>
-              </div>
-              <Link
-                href="/feed"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-indigo-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-indigo-50"
-              >
-                Go Rate Profiles <ArrowRight size={13} />
-              </Link>
-            </div>
-          )}
-        </div>
-      </div> */}
     </div>
   );
 }
